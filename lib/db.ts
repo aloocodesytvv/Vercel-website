@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless'
 export type ApplicationRow = {
   id: number
   code: string
+  track: string
   role: string
   name: string
   email: string
@@ -18,6 +19,14 @@ export type ApplicationRow = {
   timezone: string
   links: string
   message: string
+  staff_role: string
+  portfolio: string
+  tools: string
+  hours: string
+  past_teams: string
+  pitch: string
+  flex_lane: string
+  shotcalling: string
   status: string
   rating: number
   admin_notes: string
@@ -54,6 +63,7 @@ export function ensureSchema() {
       await sql`CREATE TABLE IF NOT EXISTS applications (
         id SERIAL PRIMARY KEY,
         code TEXT UNIQUE NOT NULL,
+        track TEXT NOT NULL DEFAULT 'player',
         role TEXT NOT NULL,
         name TEXT NOT NULL,
         email TEXT NOT NULL,
@@ -69,6 +79,14 @@ export function ensureSchema() {
         timezone TEXT NOT NULL,
         links TEXT NOT NULL DEFAULT '',
         message TEXT NOT NULL,
+        staff_role TEXT NOT NULL DEFAULT '',
+        portfolio TEXT NOT NULL DEFAULT '',
+        tools TEXT NOT NULL DEFAULT '',
+        hours TEXT NOT NULL DEFAULT '',
+        past_teams TEXT NOT NULL DEFAULT '',
+        pitch TEXT NOT NULL DEFAULT '',
+        flex_lane TEXT NOT NULL DEFAULT '',
+        shotcalling TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT 'new',
         rating INTEGER NOT NULL DEFAULT 0,
         admin_notes TEXT NOT NULL DEFAULT '',
@@ -77,6 +95,17 @@ export function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`
+      // Backfill for databases created before the Ashen Wings split.
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS track TEXT NOT NULL DEFAULT 'player'`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS staff_role TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS portfolio TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS tools TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS hours TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS past_teams TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS pitch TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS flex_lane TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS shotcalling TEXT NOT NULL DEFAULT ''`
+      await sql`UPDATE applications SET track = 'staff' WHERE track = 'player' AND code LIKE 'AW-S-%'`
       await sql`CREATE TABLE IF NOT EXISTS contact_messages (
         id SERIAL PRIMARY KEY,
         topic TEXT NOT NULL,
@@ -97,8 +126,9 @@ export function ensureSchema() {
   return ready
 }
 
-export function trackingCode() {
+export function trackingCode(track: 'player' | 'staff' = 'player') {
   const alphabet = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
   const bytes = crypto.getRandomValues(new Uint8Array(6))
-  return `FW-${Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('')}`
+  const prefix = track === 'staff' ? 'AW-S-' : 'AW-P-'
+  return `${prefix}${Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('')}`
 }

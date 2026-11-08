@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { btn } from '@/lib/ui'
 
 export function CtaBand({
-  title = 'Your seat in the pack is waiting.',
+  title = 'Your seat on the roster is waiting.',
   text = 'Applications take five minutes. Every one is read by the manager.',
 }: {
   title?: string
@@ -12,7 +12,7 @@ export function CtaBand({
 }) {
   return (
     <section className="relative isolate overflow-hidden border-t border-white/10">
-      <Image src="/art/pack.png" alt="" fill sizes="100vw" className="-z-20 object-cover" />
+      <Image src="/art/recruit-staff.jpg" alt="" fill sizes="100vw" className="-z-20 object-cover" />
       <div className="absolute inset-0 -z-10 bg-ink/80" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/60 to-ember/20" />
       <div className="mx-auto flex max-w-7xl flex-col items-start gap-8 px-5 py-24 md:px-8 md:py-32">

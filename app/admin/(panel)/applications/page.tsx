@@ -6,23 +6,25 @@ import { StatusBadge } from '@/components/site/status-badge'
 import { ensureSchema, getSql, type ApplicationRow } from '@/lib/db'
 import { getRole, roles, statuses } from '@/lib/site'
 import { btn } from '@/lib/ui'
+import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = { title: 'Applications' }
 
-type Params = { status?: string; role?: string; q?: string }
+type Params = { status?: string; role?: string; track?: string; q?: string }
 
 export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<Params> }) {
-  const { status = '', role = '', q = '' } = await searchParams
+  const { status = '', role = '', track = '', q = '' } = await searchParams
   const term = `%${q.trim()}%`
   await ensureSchema()
   const rows = (await getSql()`SELECT * FROM applications
     WHERE (${status} = '' OR status = ${status})
       AND (${role} = '' OR role = ${role})
+      AND (${track} = '' OR track = ${track})
       AND (${q.trim()} = '' OR name ILIKE ${term} OR email ILIKE ${term} OR discord ILIKE ${term} OR ign ILIKE ${term} OR code ILIKE ${term})
     ORDER BY created_at DESC LIMIT 200`) as ApplicationRow[]
 
-  const exportQuery = new URLSearchParams(Object.entries({ status, role, q }).filter(([, value]) => value)).toString()
-  const filtered = Boolean(status || role || q)
+  const exportQuery = new URLSearchParams(Object.entries({ status, role, track, q }).filter(([, value]) => value)).toString()
+  const filtered = Boolean(status || role || track || q)
 
   return (
     <div className="flex flex-col gap-8">
@@ -37,11 +39,19 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
         </a>
       </div>
 
-      <form className="grid gap-3 border border-white/10 bg-panel p-4 md:grid-cols-[1fr_12rem_12rem_auto]">
+      <form className="grid gap-3 border border-white/10 bg-panel p-4 md:grid-cols-[1fr_10rem_12rem_12rem_auto]">
         <label className="relative block">
           <span className="sr-only">Search applications</span>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-mute" />
           <input name="q" defaultValue={q} placeholder="Search name, email, Discord, IGN or code" className="field pl-10" />
+        </label>
+        <label>
+          <span className="sr-only">Track</span>
+          <select name="track" defaultValue={track} className="field">
+            <option value="">All tracks</option>
+            <option value="player">Players</option>
+            <option value="staff">Staff &amp; Creators</option>
+          </select>
         </label>
         <label>
           <span className="sr-only">Status</span>
@@ -99,8 +109,13 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 text-sm">
-                  <span className="text-bone/85">{getRole(app.role)?.name ?? app.role}</span>
-                  <span className="text-xs text-mute">{app.rank || 'No rank'}</span>
+                  <span className="flex items-center gap-2 text-bone/85">
+                    {getRole(app.track === 'staff' ? app.staff_role || app.role : app.role)?.name ?? app.role}
+                    <span className={cn('px-1.5 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider', app.track === 'staff' ? 'bg-gold/20 text-gold' : 'bg-ember/20 text-ember-soft')}>
+                      {app.track === 'staff' ? 'Staff' : 'Player'}
+                    </span>
+                  </span>
+                  <span className="text-xs text-mute">{app.track === 'staff' ? app.experience || 'No experience' : app.rank || 'No rank'}</span>
                 </div>
                 <div>
                   <StatusBadge status={app.status} />

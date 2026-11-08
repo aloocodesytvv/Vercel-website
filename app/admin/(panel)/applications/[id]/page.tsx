@@ -50,21 +50,39 @@ export default async function ApplicationDetailPage({
   const app = rows[0]
   if (!app) notFound()
 
-  const role = getRole(app.role)
+  const isStaff = app.track === 'staff'
+  const role = getRole(isStaff ? app.staff_role || app.role : app.role)
   const experience = experienceLevels.find((level) => level.value === app.experience)?.label ?? app.experience
 
-  const fields: { label: string; value: string }[] = [
-    { label: 'Email', value: app.email },
-    { label: 'Discord', value: app.discord },
-    { label: 'Age', value: String(app.age) },
-    { label: 'Timezone', value: app.timezone },
-    { label: 'In-game name', value: app.ign || '-' },
-    { label: 'Rank', value: app.rank || '-' },
-    { label: 'Game ID', value: app.game_id ? `${app.game_id} (${app.server_id})` : '-' },
-    { label: 'Experience', value: experience },
-    { label: 'Main heroes', value: app.main_heroes || '-' },
-    { label: 'Availability', value: app.availability },
-  ]
+  const fields: { label: string; value: string }[] = isStaff
+    ? [
+        { label: 'Track', value: 'Staff & Creators' },
+        { label: 'Email', value: app.email },
+        { label: 'Discord', value: app.discord },
+        { label: 'Age', value: String(app.age) },
+        { label: 'Timezone', value: app.timezone },
+        { label: 'Experience', value: experience },
+        { label: 'Portfolio', value: app.portfolio || '-' },
+        { label: 'Tools & skills', value: app.tools || '-' },
+        { label: 'Weekly hours', value: app.hours || '-' },
+        { label: 'Past teams', value: app.past_teams || '-' },
+        { label: 'Availability', value: app.availability },
+      ]
+    : [
+        { label: 'Track', value: 'Player' },
+        { label: 'Email', value: app.email },
+        { label: 'Discord', value: app.discord },
+        { label: 'Age', value: String(app.age) },
+        { label: 'Timezone', value: app.timezone },
+        { label: 'In-game name', value: app.ign || '-' },
+        { label: 'Rank', value: app.rank || '-' },
+        { label: 'Game ID', value: app.game_id ? `${app.game_id} (${app.server_id})` : '-' },
+        { label: 'Experience', value: experience },
+        { label: 'Main heroes', value: app.main_heroes || '-' },
+        { label: 'Flex lane', value: app.flex_lane || '-' },
+        { label: 'Shot-calling', value: app.shotcalling || '-' },
+        { label: 'Availability', value: app.availability },
+      ]
 
   return (
     <div className="flex flex-col gap-8">
@@ -108,6 +126,13 @@ export default async function ApplicationDetailPage({
             <h2 className="text-[0.7rem] font-bold uppercase tracking-[0.25em] text-ember">Their story</h2>
             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-bone/90">{app.message}</p>
           </section>
+
+          {isStaff && app.pitch && (
+            <section className="flex flex-col gap-3 border border-gold/30 bg-gold/5 p-6">
+              <h2 className="text-[0.7rem] font-bold uppercase tracking-[0.25em] text-gold">First idea</h2>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-bone/90">{app.pitch}</p>
+            </section>
+          )}
 
           {app.links && (
             <section className="flex flex-col gap-3 border border-white/10 bg-panel p-6">

@@ -4,17 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { roles, site } from '@/lib/site'
 import { btn } from '@/lib/ui'
 import { cn } from '@/lib/utils'
-
-const embers = [
-  { left: '8%', delay: '0s', size: 4 },
-  { left: '22%', delay: '2.2s', size: 3 },
-  { left: '41%', delay: '4.1s', size: 5 },
-  { left: '57%', delay: '1.3s', size: 3 },
-  { left: '68%', delay: '3.4s', size: 4 },
-  { left: '79%', delay: '5.2s', size: 3 },
-  { left: '90%', delay: '0.8s', size: 5 },
-  { left: '33%', delay: '5.8s', size: 3 },
-]
+import { AshenDrift } from './ashen-drift'
 
 const facts = [
   { label: 'Game', value: 'MLBB' },
@@ -27,25 +17,17 @@ export function Hero() {
   return (
     <section className="relative isolate flex min-h-svh flex-col justify-end overflow-hidden">
       <Image
-        src="/art/hero-wolf.png"
-        alt=""
+        src="/art/hero-pharsa.jpg"
+        alt="Pharsa in Empress Phoenix splash art from Mobile Legends: Bang Bang"
         fill
         priority
         sizes="100vw"
-        className="-z-20 object-cover object-[78%_center] md:object-[70%_center]"
+        className="-z-20 object-cover object-[55%_center] md:object-[65%_center]"
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/75 to-ink/10 md:via-ink/40 md:to-transparent" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-transparent to-ink/70" />
 
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        {embers.map((ember, index) => (
-          <span
-            key={index}
-            className="absolute bottom-0 animate-rise rounded-full bg-ember-soft shadow-[0_0_12px_2px_#ff5a1f]"
-            style={{ left: ember.left, width: ember.size, height: ember.size, animationDelay: ember.delay }}
-          />
-        ))}
-      </div>
+      <AshenDrift className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
 
       <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-36 md:px-8 md:pb-14">
         <div className="flex max-w-3xl animate-fade-up flex-col items-start gap-7">
@@ -57,10 +39,10 @@ export function Hero() {
             Recruitment is open
           </p>
 
-          <h1 className="display text-[clamp(3.6rem,13vw,10.5rem)] text-bone">
-            Rise with
+          <h1 className="font-serif text-[clamp(3rem,9vw,7.5rem)] font-medium italic leading-[1.05] text-bone">
+            Rise from
             <br />
-            the <span className="text-ember">pack.</span>
+            the <span className="text-gold">ashes.</span>
           </h1>
 
           <p className="max-w-xl text-base leading-relaxed text-bone/75 md:text-lg">

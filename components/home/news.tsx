@@ -8,8 +8,8 @@ export function News() {
   return (
     <section id="news" className="border-y border-white/10 bg-panel">
       <div className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
-        <SectionHeading index="04" eyebrow="News & updates" title={<>From the <span className="text-ember">den.</span></>}>
-          Announcements, standards and open doors from the Fnatic Wolf team.
+        <SectionHeading index="04" eyebrow="News & updates" title={<>From the <span className="text-ember">org.</span></>}>
+          Announcements, standards and open doors from the Ashen Wings team.
         </SectionHeading>
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">

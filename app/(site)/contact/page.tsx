@@ -5,7 +5,7 @@ import { socialLinks } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'Contact',
-  description: 'Partnerships, scrims, sponsorships and media enquiries for Fnatic Wolf. Message the manager directly.',
+  description: 'Partnerships, scrims, sponsorships and media enquiries for Ashen Wings. Message the manager directly.',
 }
 
 const promises = [
@@ -19,7 +19,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
   const socials = socialLinks()
   return (
     <>
-      <PageHero eyebrow="Contact" title={<>Let&apos;s build <span className="text-ember">together.</span></>} image="/art/pack.png" position="50% 50%">
+      <PageHero eyebrow="Contact" title={<>Let&apos;s build <span className="text-ember">together.</span></>} image="/art/role-staff.jpg" position="50% 50%">
         Organisations, creators, sponsors and media: tell us what you have in mind.
       </PageHero>
       <section className="mx-auto grid max-w-7xl gap-12 px-5 py-14 md:px-8 md:py-20 lg:grid-cols-[1fr_1.2fr]">

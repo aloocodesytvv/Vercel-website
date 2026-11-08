@@ -10,13 +10,13 @@ export function Footer() {
         aria-hidden="true"
         className="display pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[clamp(5rem,22vw,20rem)] text-white/[0.03]"
       >
-        Fnatic Wolf
+        {site.name}
       </p>
       <div className="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-8">
         <div className="flex max-w-sm flex-col gap-5">
           <Logo />
           <p className="text-sm leading-relaxed text-mute">
-            A young, hungry {site.game} esports organisation. We are building the pack one player, one creator and one partner at a time.
+            A young, hungry {site.game} esports organisation. We are building the roster one player, one creator and one partner at a time.
           </p>
         </div>
 
@@ -43,7 +43,10 @@ export function Footer() {
           <ul className="flex flex-col gap-3 text-sm text-mute">
             {roles.map((role) => (
               <li key={role.id}>
-                <Link href={`/recruitment?role=${role.id}`} className="transition-colors hover:text-bone">
+                <Link
+                  href={role.player ? `/recruitment?track=player&role=${role.id}` : '/recruitment?track=staff'}
+                  className="transition-colors hover:text-bone"
+                >
                   {role.name}
                 </Link>
               </li>
@@ -77,7 +80,10 @@ export function Footer() {
 
       <div className="relative border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-xs text-mute md:flex-row md:items-center md:justify-between md:px-8">
-          <p>&copy; {new Date().getFullYear()} Fnatic Wolf. All rights reserved. Not affiliated with Moonton.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {site.name}. All rights reserved. Not affiliated with Moonton. Hero artwork &copy; Moonton,
+            used for identification.
+          </p>
           <Link href="/admin" className="transition-colors hover:text-bone">
             Staff login
           </Link>

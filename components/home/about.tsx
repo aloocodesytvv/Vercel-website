@@ -3,7 +3,7 @@ import { SectionHeading } from '@/components/site/section-heading'
 
 const pillars = [
   { title: 'Discipline', text: 'Scheduled practice, honest VOD review and a standard we hold every member to.' },
-  { title: 'Community', text: 'A roster that supports each other on and off the Rift, with a manager who is reachable.' },
+  { title: 'Community', text: 'A roster that supports each other on and off the Land of Dawn, with a manager who is reachable.' },
   { title: 'Ambition', text: 'We are early, and we say so. Everyone who joins now helps write the first chapter.' },
 ]
 
@@ -12,7 +12,7 @@ export function About() {
     <section id="about" className="mx-auto grid max-w-7xl gap-14 px-5 py-24 md:px-8 md:py-32 lg:grid-cols-[1.05fr_1fr] lg:items-center">
       <div className="flex flex-col gap-10">
         <SectionHeading index="01" eyebrow="Who we are" title={<>Built from <span className="text-ember">zero.</span> Built to win.</>}>
-          Fnatic Wolf is a new Mobile Legends: Bang Bang organisation with big goals and a small, focused team. We would rather earn
+          Ashen Wings is a new Mobile Legends: Bang Bang organisation with big goals and a small, focused team. We would rather earn
           respect with results and professionalism than borrow it with hype.
         </SectionHeading>
 
@@ -32,8 +32,8 @@ export function About() {
       <div className="relative">
         <div className="clip-cut relative aspect-[4/3] overflow-hidden bg-panel lg:aspect-[5/6]">
           <Image
-            src="/art/pack.png"
-            alt="Five armored wolf warriors facing a glowing sunrise"
+            src="/art/landing-gusion.jpg"
+            alt="Yu Zhong, the MLBB fighter, in Blood Serpent splash art"
             fill
             sizes="(min-width: 1024px) 45vw, 100vw"
             className="object-cover object-[50%_50%]"

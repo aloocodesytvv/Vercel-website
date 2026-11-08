@@ -16,13 +16,13 @@ export default async function AdminLoginPage() {
   const configured = adminConfigured()
   return (
     <main className="relative isolate flex min-h-svh items-center justify-center px-5 py-16">
-      <Image src="/art/hero-wolf.png" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[75%_center] opacity-40" />
+      <Image src="/art/hero-pharsa.jpg" alt="" fill priority sizes="100vw" className="-z-20 object-cover object-[65%_center] opacity-40" />
       <div className="absolute inset-0 -z-10 bg-ink/80" />
       <div className="clip-cut flex w-full max-w-md flex-col gap-8 bg-panel/95 p-8 backdrop-blur md:p-10">
         <Logo />
         <div className="flex flex-col gap-2">
-          <h1 className="display text-5xl text-bone">Admin den</h1>
-          <p className="text-sm text-mute">Recruitment management for the Fnatic Wolf manager.</p>
+          <h1 className="display text-5xl text-bone">Admin</h1>
+          <p className="text-sm text-mute">Recruitment management for the Ashen Wings manager.</p>
         </div>
         {!configured && (
           <p role="alert" className="border-l-2 border-amber-400 bg-amber-400/10 p-3 text-sm text-amber-200">

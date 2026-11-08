@@ -6,7 +6,7 @@ import { faqs } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: 'FAQ',
-  description: 'Answers about joining Fnatic Wolf: requirements, roles, review time, partnerships and more.',
+  description: 'Answers about joining Ashen Wings: requirements, roles, review time, partnerships and more.',
 }
 
 export default function FaqPage() {

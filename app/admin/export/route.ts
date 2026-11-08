@@ -5,10 +5,19 @@ export const dynamic = 'force-dynamic'
 
 const columns: [string, (row: ApplicationRow) => string | number][] = [
   ['Code', (r) => r.code],
+  ['Track', (r) => r.track],
   ['Submitted', (r) => r.created_at],
   ['Status', (r) => r.status],
   ['Rating', (r) => r.rating],
   ['Role', (r) => r.role],
+  ['Staff role', (r) => r.staff_role],
+  ['Portfolio', (r) => r.portfolio],
+  ['Tools', (r) => r.tools],
+  ['Weekly hours', (r) => r.hours],
+  ['Past teams', (r) => r.past_teams],
+  ['Pitch', (r) => r.pitch],
+  ['Flex lane', (r) => r.flex_lane],
+  ['Shot-calling', (r) => r.shotcalling],
   ['Name', (r) => r.name],
   ['Email', (r) => r.email],
   ['Discord', (r) => r.discord],
@@ -38,6 +47,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const status = url.searchParams.get('status') ?? ''
   const role = url.searchParams.get('role') ?? ''
+  const track = url.searchParams.get('track') ?? ''
   const q = (url.searchParams.get('q') ?? '').trim()
   const term = `%${q}%`
 
@@ -45,6 +55,7 @@ export async function GET(request: Request) {
   const rows = (await getSql()`SELECT * FROM applications
     WHERE (${status} = '' OR status = ${status})
       AND (${role} = '' OR role = ${role})
+      AND (${track} = '' OR track = ${track})
       AND (${q} = '' OR name ILIKE ${term} OR email ILIKE ${term} OR discord ILIKE ${term} OR ign ILIKE ${term} OR code ILIKE ${term})
     ORDER BY created_at DESC`) as ApplicationRow[]
 
@@ -54,7 +65,7 @@ export async function GET(request: Request) {
   return new Response(`\uFEFF${lines.join('\r\n')}`, {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="fnatic-wolf-applications-${new Date().toISOString().slice(0, 10)}.csv"`,
+      'Content-Disposition': `attachment; filename="ashen-wings-applications-${new Date().toISOString().slice(0, 10)}.csv"`,
       'Cache-Control': 'no-store',
     },
   })

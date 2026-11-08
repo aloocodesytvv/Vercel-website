@@ -64,7 +64,7 @@ export function StatusForm() {
         <TextField
           id="code"
           label="Tracking code"
-          placeholder="FW-XXXXXX"
+          placeholder="AW-XXXXXX"
           autoCapitalize="characters"
           required
           value={code}

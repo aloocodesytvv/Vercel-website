@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   }
 
   const input = cleanApplication(body)
-  if (input.website) return NextResponse.json({ ok: true, code: 'FW-RECEIVED' })
+  if (input.website) return NextResponse.json({ ok: true, code: 'AW-RECEIVED' })
 
   const errors = validateApplication(input)
   if (Object.keys(errors).length) return NextResponse.json({ ok: false, errors }, { status: 422 })
@@ -21,8 +21,9 @@ export async function POST(request: Request) {
     await ensureSchema()
     const sql = getSql()
 
+    const roleKey = input.track === 'staff' ? input.staffRole : input.role
     const recent = await sql`SELECT id FROM applications
-      WHERE email = ${input.email} AND role = ${input.role} AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`
+      WHERE email = ${input.email} AND role = ${roleKey} AND track = ${input.track} AND created_at > NOW() - INTERVAL '24 hours' LIMIT 1`
     if (recent.length) {
       return NextResponse.json(
         { ok: false, error: 'We already received an application from this email for that role in the last 24 hours.' },
@@ -30,11 +31,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const code = trackingCode()
+    const code = trackingCode(input.track)
     const rows = (await sql`INSERT INTO applications
-      (code, role, name, email, discord, age, ign, game_id, server_id, rank, main_heroes, experience, availability, timezone, links, message)
-      VALUES (${code}, ${input.role}, ${input.name}, ${input.email}, ${input.discord}, ${Number(input.age)}, ${input.ign}, ${input.gameId},
-        ${input.serverId}, ${input.rank}, ${input.mainHeroes}, ${input.experience}, ${input.availability}, ${input.timezone}, ${input.links}, ${input.message})
+      (code, track, role, name, email, discord, age, ign, game_id, server_id, rank, main_heroes, experience, availability, timezone, links, message,
+       staff_role, portfolio, tools, hours, past_teams, pitch, flex_lane, shotcalling)
+      VALUES (${code}, ${input.track}, ${roleKey}, ${input.name}, ${input.email}, ${input.discord}, ${Number(input.age)}, ${input.ign}, ${input.gameId},
+        ${input.serverId}, ${input.rank}, ${input.mainHeroes}, ${input.experience}, ${input.availability}, ${input.timezone}, ${input.links}, ${input.message},
+        ${input.staffRole}, ${input.portfolio}, ${input.tools}, ${input.hours}, ${input.pastTeams}, ${input.pitch}, ${input.flexLane}, ${input.shotcalling})
       RETURNING *`) as ApplicationRow[]
 
     const saved = rows[0]

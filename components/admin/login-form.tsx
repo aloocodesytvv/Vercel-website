@@ -22,7 +22,7 @@ export function LoginForm() {
       </div>
       <button type="submit" disabled={pending} className={btn.primary}>
         {pending && <LoaderCircle className="size-4 animate-spin" />}
-        {pending ? 'Checking' : 'Enter the den'}
+        {pending ? 'Checking' : 'Sign in'}
       </button>
     </form>
   )

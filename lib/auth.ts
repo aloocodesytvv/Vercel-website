@@ -2,12 +2,12 @@ import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-const COOKIE = 'fw_admin'
+const COOKIE = 'aw_admin'
 const MAX_AGE = 60 * 60 * 24 * 7
 
 const secretKey = () => {
   const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD
-  return secret ? createHash('sha256').update(`fw-session:${secret}`).digest() : null
+  return secret ? createHash('sha256').update(`aw-session:${secret}`).digest() : null
 }
 
 const sign = (value: string) => {

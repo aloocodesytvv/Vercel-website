@@ -17,7 +17,9 @@ export default async function AdminOverviewPage() {
       COUNT(*) FILTER (WHERE status = 'new')::int AS fresh,
       COUNT(*) FILTER (WHERE status IN ('shortlisted','trial'))::int AS shortlisted,
       COUNT(*) FILTER (WHERE status = 'accepted')::int AS accepted,
-      COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days')::int AS week
+      COUNT(*) FILTER (WHERE created_at > NOW() - INTERVAL '7 days')::int AS week,
+      COUNT(*) FILTER (WHERE track = 'player')::int AS players,
+      COUNT(*) FILTER (WHERE track = 'staff')::int AS staff
       FROM applications`,
     sql`SELECT role, COUNT(*)::int AS n FROM applications GROUP BY role`,
     sql`SELECT status, COUNT(*)::int AS n FROM applications GROUP BY status`,
@@ -111,6 +113,24 @@ export default async function AdminOverviewPage() {
                   </li>
                 )
               })}
+            </ul>
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <h2 className="display text-3xl text-bone">By track</h2>
+            <ul className="grid grid-cols-2 gap-px border border-white/10 bg-white/10">
+              <li>
+                <Link href="/admin/applications?track=player" className="flex flex-col gap-1 bg-panel p-5 transition-colors hover:bg-panel-2">
+                  <span className="display text-4xl text-bone">{c.players}</span>
+                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ember">Players</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/admin/applications?track=staff" className="flex flex-col gap-1 bg-panel p-5 transition-colors hover:bg-panel-2">
+                  <span className="display text-4xl text-bone">{c.staff}</span>
+                  <span className="text-[0.65rem] font-bold uppercase tracking-[0.2em] text-gold">Staff &amp; Creators</span>
+                </Link>
+              </li>
             </ul>
           </section>
 

@@ -9,7 +9,7 @@ import { ensureSchema, getSql } from '@/lib/db'
 import { discordConfigured } from '@/lib/discord'
 
 export const metadata: Metadata = {
-  title: { default: 'Admin', template: '%s | Fnatic Wolf Admin' },
+  title: { default: 'Admin', template: '%s | Ashen Wings Admin' },
   robots: { index: false, follow: false },
 }
 

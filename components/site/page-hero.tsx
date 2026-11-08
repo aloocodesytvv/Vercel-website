@@ -5,8 +5,8 @@ export function PageHero({
   eyebrow,
   title,
   children,
-  image = '/art/hero-wolf.png',
-  position = '80% 40%',
+  image = '/art/hero-pharsa.jpg',
+  position = '70% 30%',
 }: {
   eyebrow: string
   title: ReactNode

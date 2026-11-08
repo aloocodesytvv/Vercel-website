@@ -4,7 +4,7 @@ import { PageHero } from '@/components/site/page-hero'
 
 export const metadata: Metadata = {
   title: 'Application status',
-  description: 'Track your Fnatic Wolf recruitment application with your tracking code.',
+  description: 'Track your Ashen Wings recruitment application with your tracking code.',
 }
 
 export default function StatusPage() {

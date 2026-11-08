@@ -42,7 +42,7 @@ export function Header() {
       )}
     >
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 md:px-8">
-        <Link href="/" aria-label="Fnatic Wolf home">
+        <Link href="/" aria-label="Ashen Wings home">
           <Logo />
         </Link>
 

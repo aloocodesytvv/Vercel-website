@@ -8,13 +8,13 @@ export function Partners() {
   return (
     <section id="partners" className="mx-auto grid max-w-7xl gap-14 px-5 py-24 md:px-8 md:py-32 lg:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col gap-8">
-        <SectionHeading index="05" eyebrow="For partners" title={<>Build with the <span className="text-ember">pack.</span></>}>
+        <SectionHeading index="05" eyebrow="For partners" title={<>Build with <span className="text-ember">Ashen Wings.</span></>}>
           Organisations, creators and brands: we are open to scrims, collaborations and sponsorships. You get a direct line to the
           manager and a team that treats every partnership professionally.
         </SectionHeading>
         <div>
-          <Link href="/contact?topic=partnership" className={btn.primary}>
-            Start a collaboration
+          <Link href="/partners" className={btn.primary}>
+            See partnerships
             <ArrowRight className="size-4" />
           </Link>
         </div>
