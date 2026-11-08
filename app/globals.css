@@ -1,0 +1,189 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #07070a;
+  --foreground: #f3eee6;
+  --card: #0f0f13;
+  --card-foreground: #f3eee6;
+  --popover: #0f0f13;
+  --popover-foreground: #f3eee6;
+  --primary: #ff5a1f;
+  --primary-foreground: #0a0a0c;
+  --secondary: #17171c;
+  --secondary-foreground: #f3eee6;
+  --muted: #17171c;
+  --muted-foreground: #9a9aa3;
+  --accent: #17171c;
+  --accent-foreground: #f3eee6;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #ff5a1f;
+  --radius: 0.25rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-ink: #07070a;
+  --color-panel: #0f0f13;
+  --color-panel-2: #17171c;
+  --color-ember: #ff5a1f;
+  --color-ember-soft: #ff8a4c;
+  --color-bone: #f3eee6;
+  --color-mute: #9a9aa3;
+  --color-line: rgba(255, 255, 255, 0.09);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-barlow), 'Arial Narrow', Impact, sans-serif;
+
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-rise: rise 7s ease-in infinite;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes rise {
+    0% {
+      transform: translateY(0) scale(1);
+      opacity: 0;
+    }
+    15% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translateY(-70vh) translateX(30px) scale(0.2);
+      opacity: 0;
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: #ff5a1f;
+    color: #07070a;
+  }
+  :focus-visible {
+    outline: 2px solid #ff5a1f;
+    outline-offset: 3px;
+  }
+}
+
+@utility clip-cut {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+@utility clip-cut-sm {
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px currentColor;
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 0.9;
+}
+
+@layer components {
+  .field {
+    display: block;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .field::placeholder {
+    color: rgba(243, 238, 230, 0.3);
+  }
+  .field:hover {
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  .field:focus {
+    outline: none;
+    border-color: #ff5a1f;
+    background: rgba(255, 90, 31, 0.05);
+  }
+  .field[aria-invalid='true'] {
+    border-color: #ef4444;
+  }
+  select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23ff5a1f' stroke-width='2'%3E%3Cpath d='m1 1 5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+  select.field option {
+    background: #0f0f13;
+    color: #f3eee6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
