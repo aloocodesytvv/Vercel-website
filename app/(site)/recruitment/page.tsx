@@ -34,7 +34,6 @@ export default async function RecruitmentPage({ searchParams }: { searchParams: 
                   <span className="block text-[0.65rem] font-bold uppercase tracking-[0.25em] text-ember">Players</span>
                   <span className="display text-3xl text-bone md:text-4xl">Trial in scrims.</span>
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-bone/60">Pictured: Dyrroth · Naraka Flame</span>
               </figcaption>
             </div>
           </figure>
@@ -53,7 +52,6 @@ export default async function RecruitmentPage({ searchParams }: { searchParams: 
                   <span className="block text-[0.65rem] font-bold uppercase tracking-[0.25em] text-gold">Staff &amp; Creators</span>
                   <span className="display text-3xl text-bone md:text-4xl">Trial on real work.</span>
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-bone/60">Pictured: Ling · Serene Plume</span>
               </figcaption>
             </div>
           </figure>

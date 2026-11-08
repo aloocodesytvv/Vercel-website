@@ -35,9 +35,6 @@ export function RolesGrid() {
                 <div className="absolute inset-x-0 bottom-0 flex flex-col gap-2 p-6">
                   <span className="text-[0.7rem] font-bold uppercase tracking-[0.25em] text-ember">{role.tag}</span>
                   <h3 className="display text-4xl text-bone">{role.name}</h3>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-bone/60">
-                    Pictured: {role.hero} · {role.skin}
-                  </p>
                   <p className="max-w-xs text-sm leading-relaxed text-bone/70">{role.blurb}</p>
                   <span className="mt-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-bone transition-colors group-hover:text-ember">
                     Apply for this role
