@@ -29,7 +29,7 @@ export default async function RecruitmentPage({ searchParams }: { searchParams: 
                 className="object-cover object-[50%_20%] transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
-              <figcaption className="absolute inset-x-0 bottom-0 flex items-baseline justify-between p-5">
+              <figcaption className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-5">
                 <span>
                   <span className="block text-[0.65rem] font-bold uppercase tracking-[0.25em] text-ember">Players</span>
                   <span className="display text-3xl text-bone md:text-4xl">Trial in scrims.</span>
@@ -48,7 +48,7 @@ export default async function RecruitmentPage({ searchParams }: { searchParams: 
                 className="object-cover object-[50%_20%] transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/30 to-transparent" />
-              <figcaption className="absolute inset-x-0 bottom-0 flex items-baseline justify-between p-5">
+              <figcaption className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-5">
                 <span>
                   <span className="block text-[0.65rem] font-bold uppercase tracking-[0.25em] text-gold">Staff &amp; Creators</span>
                   <span className="display text-3xl text-bone md:text-4xl">Trial on real work.</span>
