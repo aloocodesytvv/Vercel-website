@@ -45,7 +45,7 @@ const tracks: { id: Track; title: string; image: string; blurb: string; pathway:
     title: 'Players',
     image: '/art/recruit-players.jpg',
     blurb: 'Five lanes. One founding roster. Rank, hero pool and trial scrims decide it.',
-    pathway: ['Replay review', 'Sunday trial scrims', 'Join the roster'],
+    pathway: ['Replay review', 'Trial scrims, any day', 'Join the roster'],
   },
   {
     id: 'staff',
