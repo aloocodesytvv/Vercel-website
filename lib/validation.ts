@@ -100,7 +100,11 @@ export function validateApplication(input: ApplicationInput): ApplicationErrors 
     if (!staffExperienceLevels.some((level) => level.value === input.experience)) errors.experience = 'Select your experience level.'
     if (length(input.portfolio) < 4 || length(input.portfolio) > 300) errors.portfolio = 'Add a portfolio link (or a link to your work).'
     if (length(input.tools) < 2 || length(input.tools) > 200) errors.tools = 'List the tools or skills you use.'
-    if (length(input.hours) < 2 || length(input.hours) > 100) errors.hours = 'Tell us how many hours a week you can commit.'
+    // A bare number like "5" or a range like "6-8" is a valid answer — it just
+    // means that many hours a week.
+    const hours = input.hours.trim()
+    const hoursIsNumber = /^\d+(\s*-\s*\d+)?$/.test(hours)
+    if ((!hoursIsNumber && length(input.hours) < 2) || length(input.hours) > 100) errors.hours = 'Tell us how many hours a week you can commit.'
     if (length(input.pastTeams) > 300) errors.pastTeams = 'Keep this under 300 characters.'
     if (length(input.pitch) < 30) errors.pitch = 'Give us your first idea in a few sentences (30+ characters).'
     if (length(input.pitch) > 800) errors.pitch = 'Please keep your pitch under 800 characters.'
@@ -132,6 +136,12 @@ export function validateApplication(input: ApplicationInput): ApplicationErrors 
 
 export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unknown>>): ApplicationInput {
   const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '')
+  // A bare number like "5" means "5 hours" a week — store it spelled out so
+  // the admin panel and Discord embed read clearly.
+  const hours = (value: unknown) => {
+    const cleaned = text(value, 120)
+    return /^\d+(\s*-\s*\d+)?$/.test(cleaned) ? `${cleaned.replace(/\s/g, '')} hours` : cleaned
+  }
   const track = raw.track === 'staff' ? 'staff' : 'player'
   return {
     track,
@@ -153,7 +163,7 @@ export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unk
     staffRole: text(raw.staffRole, 20),
     portfolio: text(raw.portfolio, 400),
     tools: text(raw.tools, 240),
-    hours: text(raw.hours, 120),
+    hours: hours(raw.hours),
     pastTeams: text(raw.pastTeams, 400),
     pitch: text(raw.pitch, 1000),
     flexLane: text(raw.flexLane, 20),

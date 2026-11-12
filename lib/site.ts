@@ -255,7 +255,7 @@ export const faqs = [
       },
       {
         q: 'What do I need to be available for?',
-        a: 'Players: scheduled scrims, practice blocks and tournaments, including our Sunday 7 PM trial block. Staff: the weekly hours you commit to on your form. Tell us your real availability; honesty here saves everyone time.',
+        a: 'Players: scheduled scrims, practice blocks and tournaments, with trial scrims on any day. Staff: the weekly hours you commit to on your form. Tell us your real availability; honesty here saves everyone time.',
       },
     ],
   },
@@ -354,7 +354,7 @@ export const mediaBoilerplate =
 export const socialLinks = () =>
   [
     { label: 'Discord', href: process.env.DISCORD_INVITE_URL },
-    { label: 'Instagram', href: process.env.INSTAGRAM_URL },
+    { label: 'Instagram', href: process.env.INSTAGRAM_URL || 'https://www.instagram.com/ashenwings_esp' },
     { label: 'YouTube', href: process.env.YOUTUBE_URL },
     { label: 'TikTok', href: process.env.TIKTOK_URL },
     { label: 'X', href: process.env.X_URL },

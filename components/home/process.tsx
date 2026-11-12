@@ -3,7 +3,7 @@ import { SectionHeading } from '@/components/site/section-heading'
 const steps = [
   { title: 'Apply', text: 'Fill in the form. It takes about five minutes and you get a tracking code instantly.' },
   { title: 'Review', text: 'The manager reads every application personally, usually within 7 to 14 days.' },
-  { title: 'Trial', text: 'Players are invited to Sunday trial scrims; staff and creators get an interview and a role-specific trial task.' },
+  { title: 'Trial', text: 'Players are invited to trial scrims on any day; staff and creators get an interview and a role-specific trial task.' },
   { title: 'Join the roster', text: 'Accepted members get onboarding, a role and a seat on the founding roster.' },
 ]
 
