@@ -1,16 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { roles, site } from '@/lib/site'
+import { site } from '@/lib/site'
 import { btn } from '@/lib/ui'
-import { cn } from '@/lib/utils'
 import { AshenDrift } from './ashen-drift'
 
-const facts = [
-  { label: 'Game', value: 'MLBB' },
-  { label: 'Open roles', value: String(roles.length) },
-  { label: 'Review time', value: '7-14 days' },
-  { label: 'Read by', value: 'The manager' },
+const steps = [
+  { n: '01', title: 'Apply', text: 'Five-minute form. Tracking code instantly.' },
+  { n: '02', title: 'Trial scrim', text: 'Scheduled on any day that suits you.' },
+  { n: '03', title: 'Answer', text: 'Reviewed personally in 7–14 days.' },
 ]
 
 export function Hero() {
@@ -26,6 +24,7 @@ export function Hero() {
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-ink via-ink/75 to-ink/10 md:via-ink/40 md:to-transparent" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-t from-ink via-transparent to-ink/70" />
+      <div aria-hidden="true" className="glow-wash pointer-events-none absolute inset-0 -z-10" />
 
       <AshenDrift className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
 
@@ -61,34 +60,21 @@ export function Hero() {
           </div>
         </div>
 
-        <dl className="mt-14 grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:mt-20 md:grid-cols-4">
-          {facts.map((fact, index) => (
-            <div key={fact.label} className={cn('flex flex-col gap-1 bg-ink/80 px-5 py-4 backdrop-blur-md', index === 0 && 'md:pl-6')}>
-              <dt className="text-[0.65rem] font-bold uppercase tracking-[0.25em] text-mute">{fact.label}</dt>
-              <dd className="display text-2xl text-bone md:text-3xl">{fact.value}</dd>
-            </div>
+        <p className="mt-14 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-mute md:mt-20">How trials work</p>
+        <ol className="mt-4 grid gap-px border border-white/10 bg-white/10 md:grid-cols-3">
+          {steps.map((step) => (
+            <li key={step.title} className="flex flex-col gap-1.5 bg-ink/80 px-5 py-5 backdrop-blur-md">
+              <span className="display text-xl text-ember">{step.n}</span>
+              <span className="display text-2xl text-bone">{step.title}</span>
+              <span className="text-sm leading-relaxed text-mute">{step.text}</span>
+            </li>
           ))}
-        </dl>
+        </ol>
+        <Link href="#process" className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember transition-colors hover:text-bone">
+          See the full process
+          <ArrowRight className="size-3.5" />
+        </Link>
       </div>
     </section>
-  )
-}
-
-export function Ticker() {
-  const items = ['Now recruiting', 'Gold lane', 'EXP lane', 'Mid lane', 'Jungle', 'Roam', 'Coaches & staff', 'Creators', 'Partnerships open']
-  const row = [...items, ...items]
-  return (
-    <div aria-hidden="true" className="overflow-hidden border-y border-ink/20 bg-ember py-3.5">
-      <div className="flex w-max animate-marquee">
-        {[...row, ...row].map((item, index) => (
-          <span key={index} className="display flex items-center gap-6 whitespace-nowrap pr-6 text-xl text-ink md:text-2xl">
-            {item}
-            <svg viewBox="0 0 16 16" className="size-3.5 shrink-0" fill="currentColor">
-              <path d="M8 0 10 6 16 8 10 10 8 16 6 10 0 8 6 6Z" />
-            </svg>
-          </span>
-        ))}
-      </div>
-    </div>
   )
 }
