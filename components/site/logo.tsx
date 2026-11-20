@@ -3,14 +3,14 @@ import { cn } from '@/lib/utils'
 import { site } from '@/lib/site'
 
 /**
- * The real Ashen Wings logo: the white phoenix head mark on the
- * navy / teal / violet gradient (v13c, the approved main logo).
- * Shown as a rounded tile, since the artwork is a full square image.
+ * The real Ashen Wings logo: the white phoenix head mark cut out with a
+ * transparent background (v13c phoenix, no gradient backdrop). It sits
+ * directly on the site's dark background — no tile, no box.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <span className={cn('relative inline-block size-9 overflow-hidden rounded-lg', className)} aria-hidden="true">
-      <Image src="/ashen-wings-logo-mark.jpg" alt="" fill sizes="112px" className="object-cover" />
+    <span className={cn('relative inline-block size-9', className)} aria-hidden="true">
+      <Image src="/ashen-wings-logo.png" alt="" fill sizes="112px" className="object-contain" />
     </span>
   )
 }
