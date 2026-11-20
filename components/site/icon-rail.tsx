@@ -32,7 +32,7 @@ const items: RailItem[] = [
   { href: '/partners', label: 'Partners', icon: Handshake },
   { href: '/faq', label: 'FAQ', icon: CircleHelp },
   { href: '/contact', label: 'Contact', icon: MessageSquareText },
-  
+  ]
 
 const socials: RailItem[] = [
   { href: 'https://instagram.com/ashenwings_esp', label: 'Instagram', icon: Camera },
