@@ -1,5 +1,8 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { SectionHeading } from '@/components/site/section-heading'
+import { btn } from '@/lib/ui'
 
 const pillars = [
   { title: 'Discipline', text: 'Scheduled practice, honest VOD review and a standard we hold every member to.' },
@@ -32,17 +35,24 @@ export function About() {
       <div className="relative">
         <div className="clip-cut relative aspect-[4/3] overflow-hidden bg-panel lg:aspect-[5/6]">
           <Image
-            src="/art/landing-gusion.jpg"
-            alt="Yu Zhong, the MLBB fighter, in Blood Serpent splash art"
+            src="/art/landing-khufra.jpg"
+            alt="Khufra in MLBB splash art, wreathed in ember flames"
             fill
             sizes="(min-width: 1024px) 45vw, 100vw"
             className="object-cover object-[50%_50%]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
-        </div>
-        <div className="absolute -bottom-5 left-4 flex flex-col gap-1 bg-ember px-5 py-4 text-ink md:-left-6">
-          <span className="text-[0.65rem] font-bold uppercase tracking-[0.25em]">Chapter</span>
-          <span className="display text-4xl">One</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-3 p-6 md:p-8">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.25em] text-teal-glow">Recruitment open</p>
+            <h3 className="display text-4xl leading-none text-bone md:text-5xl">
+              Trials are <span className="text-gold">open.</span>
+            </h3>
+            <p className="max-w-sm text-sm leading-relaxed text-bone/80">All five lanes + staff. Show us what you can do.</p>
+            <Link href="/recruitment" className={btn.primary}>
+              Apply to join
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

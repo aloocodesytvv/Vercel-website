@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { About } from '@/components/home/about'
 import { CtaBand } from '@/components/home/cta-band'
 import { FaqList } from '@/components/home/faq-list'
-import { Hero, Ticker } from '@/components/home/hero'
+import { Hero } from '@/components/home/hero'
 import { News } from '@/components/home/news'
 import { Partners } from '@/components/home/partners'
 import { Process } from '@/components/home/process'
@@ -15,7 +15,6 @@ export default function HomePage() {
   return (
     <>
       <Hero />
-      <Ticker />
       <About />
       <RolesGrid />
       <Process />
