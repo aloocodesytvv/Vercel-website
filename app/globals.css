@@ -62,7 +62,12 @@
   --font-serif: var(--font-newsreader), Georgia, serif;
   --font-display: var(--font-barlow), 'Arial Narrow', Impact, sans-serif;
 
-  --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade-up: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-hero-rise: hero-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  /* Entrance zoom, then a very slow continuous drift so the landing page
+     always feels alive (transform-only; reduced-motion collapses it). */
+  --animate-hero-image: hero-zoom 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both, hero-drift 26s ease-in-out 0s infinite alternate;
+  --animate-fade-in: fade-in 0.4s ease both;
 
   @keyframes fade-up {
     from {
@@ -72,6 +77,42 @@
     to {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes hero-zoom {
+    from {
+      opacity: 0.55;
+      transform: scale(1.1);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes hero-drift {
+    from {
+      transform: scale(1) translate(0, 0);
+    }
+    to {
+      transform: scale(1.07) translate(-1.5%, 1%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
     }
   }
 }
@@ -164,6 +205,23 @@
   select.field option {
     background: #121215;
     color: #f3eee6;
+  }
+
+  /* Soft reveal-on-scroll. Elements start visible (SSR / no-JS safe); the
+     Reveal component hides below-fold elements only after mount, then
+     reveals them when they scroll into view. Transform + opacity only. */
+  .reveal {
+    transition:
+      opacity 0.35s ease,
+      transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .reveal-hidden {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
