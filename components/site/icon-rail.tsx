@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  BookImage,
   Camera,
   CircleHelp,
   ClipboardList,
@@ -33,8 +32,7 @@ const items: RailItem[] = [
   { href: '/partners', label: 'Partners', icon: Handshake },
   { href: '/faq', label: 'FAQ', icon: CircleHelp },
   { href: '/contact', label: 'Contact', icon: MessageSquareText },
-  { href: '/media-kit', label: 'Media Kit', icon: BookImage },
-]
+  
 
 const socials: RailItem[] = [
   { href: 'https://instagram.com/ashenwings_esp', label: 'Instagram', icon: Camera },
