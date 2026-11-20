@@ -37,8 +37,8 @@ export function Header() {
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 transition-colors duration-300 lg:left-16',
-        scrolled || open ? 'border-b border-white/10 bg-ink/85 backdrop-blur-xl' : 'bg-gradient-to-b from-ink/80 to-transparent',
+        'fixed inset-x-0 top-0 z-50 transition-colors duration-300 md:left-16',
+        scrolled || open ? 'border-b border-white/10 bg-ink md:bg-ink/85 md:backdrop-blur-xl' : 'bg-gradient-to-b from-ink/80 to-transparent',
       )}
     >
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-5 md:px-8">

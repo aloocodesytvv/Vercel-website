@@ -1,19 +1,24 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
  * Gentle reveal-on-scroll: transform + opacity only, no layout shift.
  * SSR / no-JS safe — content renders visible by default and is hidden only
- * after mount when it is below the fold. Respects prefers-reduced-motion
+ * after mount when it is fully below the fold. Respects prefers-reduced-motion
  * (shows immediately, no animation).
+ *
+ * useLayoutEffect (not useEffect) so the hide happens before first paint:
+ * with useEffect, slow phones paint the section visible, then fade it out
+ * after hydration — that flash reads as a glitch. Content that is even
+ * partly in the viewport at mount is never hidden.
  */
 export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<'idle' | 'hidden' | 'visible'>('idle')
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -21,7 +26,9 @@ export function Reveal({ children, className, delay = 0 }: { children: ReactNode
       return
     }
     const rect = el.getBoundingClientRect()
-    if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+    // Any part in the viewport counts as in view — only hide what is
+    // entirely below the fold.
+    if (rect.bottom > 0 && rect.top < window.innerHeight) {
       setState('visible')
       return
     }
