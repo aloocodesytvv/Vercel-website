@@ -1,5 +1,5 @@
-import { experienceLevels, getRole, siteUrl, staffExperienceLevels, topics } from './site'
-import type { ApplicationRow, MessageRow } from './db'
+import { boardDurationLabel, experienceLevels, getBoardCategory, getRole, siteUrl, staffExperienceLevels, topics } from './site'
+import type { ApplicationRow, BoardPostRow, MessageRow } from './db'
 
 type Embed = Record<string, unknown>
 
@@ -116,4 +116,37 @@ export async function sendMessageToDiscord(message: MessageRow) {
     timestamp: new Date(message.created_at).toISOString(),
   }
   return post({ username: 'Ashen Wings  ·  Inbox', embeds: [embed] })
+}
+
+export async function sendBoardPostToDiscord(row: BoardPostRow) {
+  const base = siteUrl()
+  const category = getBoardCategory(row.category)?.label ?? row.category
+  const specifics = [
+    row.role_needed ? `Role: ${row.role_needed}${row.rank ? ` · ${row.rank}` : ''}` : '',
+    row.speciality ? `Focus: ${row.speciality}` : '',
+    row.languages ? `Languages: ${row.languages}` : '',
+    row.sells ? `Sells: ${row.sells}` : '',
+    row.buy_how ? `How to buy: ${row.buy_how}` : '',
+    row.experience ? `Experience: ${row.experience}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  const embed: Embed = {
+    author: { name: 'ASHEN WINGS  ·  ORG BOARD' },
+    title: `New board post for review  ·  ${category}`,
+    url: `${base}/admin/board`,
+    description: `## ${cut(row.org_name, 60)}\n**${cut(row.title, 100)}**\n${quote(row.detail, 600)}`,
+    color: GOLD,
+    fields: [
+      { name: '▸ Category', value: `**${category}**`, inline: true },
+      { name: '▸ Featuring', value: boardDurationLabel(row.featured_days), inline: true },
+      { name: '▸ Instagram', value: row.instagram ? mono(row.instagram) : 'n/a', inline: true },
+      ...(specifics ? [{ name: '▸ Details', value: cut(specifics, 400) }] : []),
+      { name: '▸ Review in dashboard', value: `[Open the board queue](${base}/admin/board)` },
+    ],
+    footer: { text: `Board post #${row.id}  ·  Pending review  ·  Rise from the ashes.` },
+    timestamp: new Date(row.created_at).toISOString(),
+  }
+  return post({ username: 'Ashen Wings  ·  Org Board', embeds: [embed] })
 }

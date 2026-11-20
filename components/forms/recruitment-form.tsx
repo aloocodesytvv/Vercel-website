@@ -16,7 +16,7 @@ import {
   type ApplicationInput,
   type Track,
 } from '@/lib/validation'
-import { SelectField, TextAreaField, TextField } from './controls'
+import { DropdownField, TextAreaField, TextField } from './controls'
 
 type StringKey = Exclude<keyof ApplicationInput, 'consent' | 'track'>
 
@@ -94,6 +94,11 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
       setErrors((current) => (current[key] ? { ...current, [key]: undefined } : current))
     },
   })
+
+  const setValue = (key: StringKey) => (value: string) => {
+    setValues((current) => ({ ...current, [key]: value }))
+    setErrors((current) => (current[key] ? { ...current, [key]: undefined } : current))
+  }
 
   const scrollToTop = () => topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
@@ -426,17 +431,17 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
               <div className="flex flex-col gap-6">
                 <div className="grid gap-6 sm:grid-cols-2">
                   <TextField id="ign" label="In-game name" placeholder="Your MLBB nickname" {...bind('ign')} />
-                  <SelectField id="rank" label="Current or peak rank" options={rankOptions} {...bind('rank')} />
+                  <DropdownField id="rank" label="Current or peak rank" options={rankOptions} value={values.rank} error={errors.rank} onValueChange={setValue('rank')} />
                   <TextField id="gameId" label="Game ID" inputMode="numeric" placeholder="123456789" {...bind('gameId')} />
                   <TextField id="serverId" label="Server ID" inputMode="numeric" placeholder="1234" {...bind('serverId')} />
                 </div>
                 <TextField id="mainHeroes" label="Main heroes" placeholder="e.g. Wanwan, Granger, Claude" {...bind('mainHeroes')} />
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <SelectField id="flexLane" label="Flex lane" options={flexOptions} {...bind('flexLane')} />
-                  <SelectField id="shotcalling" label="Shot-calling" options={shotcallingOptions} {...bind('shotcalling')} />
+                  <DropdownField id="flexLane" label="Flex lane" options={flexOptions} value={values.flexLane} error={errors.flexLane} onValueChange={setValue('flexLane')} />
+                  <DropdownField id="shotcalling" label="Shot-calling" options={shotcallingOptions} value={values.shotcalling} error={errors.shotcalling} onValueChange={setValue('shotcalling')} />
                 </div>
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <SelectField id="experience" label="Experience level" options={experienceOptions} {...bind('experience')} />
+                  <DropdownField id="experience" label="Experience level" options={experienceOptions} value={values.experience} error={errors.experience} onValueChange={setValue('experience')} />
                   <TextField id="timezone" label="Timezone / country" placeholder="e.g. IST, Philippines" {...bind('timezone')} />
                 </div>
                 <TextField id="availability" label="Availability" placeholder="e.g. Weekdays 7-11pm, weekends all day" {...bind('availability')} />
@@ -446,7 +451,7 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
             {step === 1 && track === 'staff' && (
               <div className="flex flex-col gap-6">
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <SelectField id="experience" label="Experience level" options={staffExperienceOptions} {...bind('experience')} />
+                  <DropdownField id="experience" label="Experience level" options={staffExperienceOptions} value={values.experience} error={errors.experience} onValueChange={setValue('experience')} />
                   <TextField id="hours" label="Weekly hours you can commit" placeholder="e.g. 6-8 hours" {...bind('hours')} />
                 </div>
                 <TextField id="portfolio" label="Portfolio link" placeholder="Drive, YouTube, Behance, portfolio site…" hint="Link to your best work — clips, edits, designs or writing." {...bind('portfolio')} />

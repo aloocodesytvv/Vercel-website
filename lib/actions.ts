@@ -68,3 +68,16 @@ export async function deleteMessageAction(formData: FormData) {
   await getSql()`DELETE FROM contact_messages WHERE id = ${id}`
   revalidatePath('/admin', 'layout')
 }
+
+export async function setBoardPostStatusAction(formData: FormData) {
+  await assertAdmin()
+  await ensureSchema()
+  const id = Number(formData.get('id'))
+  const status = String(formData.get('status') ?? '')
+  if (!Number.isInteger(id) || !['approved', 'declined', 'pending'].includes(status)) return
+  const sql = getSql()
+  await sql`UPDATE board_posts SET status = ${status}, updated_at = NOW() WHERE id = ${id}`
+  revalidatePath('/admin/board')
+  revalidatePath('/board')
+  revalidatePath('/')
+}

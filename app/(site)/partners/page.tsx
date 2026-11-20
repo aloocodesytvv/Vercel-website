@@ -69,17 +69,11 @@ export default function PartnersPage() {
           <h2 className="display max-w-3xl text-[clamp(2.4rem,6vw,5rem)] text-bone">
             Want in? <span className="text-ember">Talk to us.</span>
           </h2>
-          <p className="max-w-lg text-base text-mute">
-            Tell us who you are and what you have in mind. You will also find our logo, colours and press boilerplate on the media kit
-            page.
-          </p>
+          <p className="max-w-lg text-base text-mute">Tell us who you are and what you have in mind.</p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/contact?topic=partnership" className={btn.primary}>
               Start a collaboration
               <ArrowRight className="size-4" />
-            </Link>
-            <Link href="/media-kit" className={btn.ghost}>
-              View the media kit
             </Link>
           </div>
         </div>

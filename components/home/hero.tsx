@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import { site } from '@/lib/site'
 import { btn } from '@/lib/ui'
 import { AshenDrift } from './ashen-drift'
+import { FeaturedSlider } from './featured-slider'
 
 const steps = [
   { n: '01', title: 'Apply', text: 'Five-minute form. Tracking code instantly.' },
@@ -29,35 +30,41 @@ export function Hero() {
       <AshenDrift className="pointer-events-none absolute inset-0 -z-10 h-full w-full" />
 
       <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-36 md:px-8 md:pb-14">
-        <div className="flex max-w-3xl animate-fade-up flex-col items-start gap-7">
-          <p className="inline-flex items-center gap-3 border border-ember/40 bg-ember/10 px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-ember-soft">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-ember opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-ember" />
-            </span>
-            Recruitment is open
-          </p>
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex max-w-3xl animate-fade-up flex-col items-start gap-7">
+            <p className="inline-flex items-center gap-3 border border-ember/40 bg-ember/10 px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-ember-soft">
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-ember opacity-75" />
+                <span className="relative inline-flex size-2 rounded-full bg-ember" />
+              </span>
+              Recruitment is open
+            </p>
 
-          <h1 className="font-serif text-[clamp(3rem,9vw,7.5rem)] font-medium italic leading-[1.05] text-bone">
-            Rise from
-            <br />
-            the <span className="text-gold">ashes.</span>
-          </h1>
+            <h1 className="font-serif text-[clamp(3rem,9vw,7.5rem)] font-medium italic leading-[1.02] text-bone">
+              Ashen
+              <br />
+              Wings <span className="text-gold">Rise!</span>
+            </h1>
 
-          <p className="max-w-xl text-base leading-relaxed text-bone/75 md:text-lg">
-            {site.name} is a young {site.game} organisation built on discipline, community and ambition. Join the founding roster, or
-            partner with a team that is only getting started.
-          </p>
+            <p className="font-serif text-xl italic text-bone/80">{site.tagline}</p>
 
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Link href="/recruitment" className={btn.primary}>
-              Apply to join
-              <ArrowRight className="size-4" />
-            </Link>
-            <Link href="/contact?topic=partnership" className={btn.ghost}>
-              Partner with us
-            </Link>
+            <p className="max-w-xl text-base leading-relaxed text-bone/75 md:text-lg">
+              {site.name} is a young {site.game} organisation built on discipline, community and ambition. Join the founding roster, or
+              partner with a team that is only getting started.
+            </p>
+
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Link href="/recruitment" className={btn.primary}>
+                Apply
+                <ArrowRight className="size-4" />
+              </Link>
+              <Link href="/board" className={btn.ghost}>
+                Partner
+              </Link>
+            </div>
           </div>
+
+          <FeaturedSlider />
         </div>
 
         <p className="mt-14 text-[0.65rem] font-bold uppercase tracking-[0.25em] text-mute md:mt-20">How trials work</p>
