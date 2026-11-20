@@ -62,12 +62,12 @@
   --font-serif: var(--font-newsreader), Georgia, serif;
   --font-display: var(--font-barlow), 'Arial Narrow', Impact, sans-serif;
 
-  --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  --animate-hero-rise: hero-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-fade-up: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-hero-rise: hero-rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   /* Entrance zoom, then a very slow continuous drift so the landing page
      always feels alive (transform-only; reduced-motion collapses it). */
-  --animate-hero-image: hero-zoom 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) both, hero-drift 26s ease-in-out 2.4s infinite alternate;
-  --animate-fade-in: fade-in 1.1s ease both;
+  --animate-hero-image: hero-zoom 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both, hero-drift 26s ease-in-out 0s infinite alternate;
+  --animate-fade-in: fade-in 0.4s ease both;
 
   @keyframes fade-up {
     from {
@@ -212,8 +212,8 @@
      reveals them when they scroll into view. Transform + opacity only. */
   .reveal {
     transition:
-      opacity 0.5s ease,
-      transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+      opacity 0.35s ease,
+      transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .reveal-hidden {
     opacity: 0;

@@ -32,7 +32,6 @@ export function Hero() {
         <div className="flex max-w-3xl flex-col items-start gap-7">
           <p
             className="inline-flex animate-hero-rise items-center gap-3 border border-ember/40 bg-ember/10 px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.25em] text-ember-soft"
-            style={{ animationDelay: '100ms' }}
           >
             <span className="relative flex size-2">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-ember opacity-75" />
@@ -43,19 +42,19 @@ export function Hero() {
 
           <h1
             className="animate-hero-rise font-serif text-[clamp(3rem,9vw,7.5rem)] font-medium italic leading-[1.05] text-bone"
-            style={{ animationDelay: '220ms' }}
+            style={{ animationDelay: '40ms' }}
           >
             Rise from
             <br />
             the <span className="text-gold">ashes.</span>
           </h1>
 
-          <p className="max-w-xl animate-hero-rise text-base leading-relaxed text-bone/75 md:text-lg" style={{ animationDelay: '340ms' }}>
+          <p className="max-w-xl animate-hero-rise text-base leading-relaxed text-bone/75 md:text-lg" style={{ animationDelay: '60ms' }}>
             {site.name} is a young {site.game} organisation built on discipline, community and ambition. Join the founding roster, or
             partner with a team that is only getting started.
           </p>
 
-          <div className="flex w-full animate-hero-rise flex-col gap-3 sm:w-auto sm:flex-row" style={{ animationDelay: '460ms' }}>
+          <div className="flex w-full animate-hero-rise flex-col gap-3 sm:w-auto sm:flex-row" style={{ animationDelay: '120ms' }}>
             <Link href="/recruitment" className={btn.primary}>
               Apply to join
               <ArrowRight className="size-4" />
@@ -66,10 +65,10 @@ export function Hero() {
           </div>
         </div>
 
-        <p className="mt-14 animate-hero-rise text-[0.65rem] font-bold uppercase tracking-[0.25em] text-mute md:mt-20" style={{ animationDelay: '580ms' }}>
+        <p className="mt-14 animate-hero-rise text-[0.65rem] font-bold uppercase tracking-[0.25em] text-mute md:mt-20" style={{ animationDelay: '180ms' }}>
           How trials work
         </p>
-        <ol className="mt-4 grid animate-hero-rise gap-px border border-white/10 bg-white/10 md:grid-cols-3" style={{ animationDelay: '660ms' }}>
+        <ol className="mt-4 grid animate-hero-rise gap-px border border-white/10 bg-white/10 md:grid-cols-3" style={{ animationDelay: '240ms' }}>
           {steps.map((step) => (
             <li key={step.title} className="flex flex-col gap-1.5 bg-ink/80 px-5 py-5 backdrop-blur-md">
               <span className="display text-xl text-ember">{step.n}</span>
@@ -81,7 +80,7 @@ export function Hero() {
         <Link
           href="#process"
           className="mt-4 inline-flex animate-hero-rise items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember transition-colors hover:text-bone"
-          style={{ animationDelay: '720ms' }}
+          style={{ animationDelay: '300ms' }}
         >
           See the full process
           <ArrowRight className="size-3.5" />

@@ -33,7 +33,7 @@ export function About() {
         </ul>
       </Reveal>
 
-      <Reveal delay={120} className="relative">
+      <Reveal className="relative">
         <div className="clip-cut relative aspect-[4/3] overflow-hidden bg-panel lg:aspect-[5/6]">
           <Image
             src="/art/landing-khufra.jpg"

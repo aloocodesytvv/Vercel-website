@@ -31,7 +31,7 @@ export default function HomePage() {
               See all questions
             </Link>
           </Reveal>
-          <Reveal delay={100}>
+          <Reveal>
             <FaqList items={preview} />
           </Reveal>
         </div>

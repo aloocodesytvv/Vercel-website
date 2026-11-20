@@ -15,7 +15,7 @@ export function RolesGrid() {
           </SectionHeading>
         </Reveal>
 
-        <Reveal delay={100} className="mt-14">
+        <Reveal className="mt-14">
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {roles.map((role, index) => (
               <li key={role.id}>

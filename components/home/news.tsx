@@ -15,7 +15,7 @@ export function News() {
           </SectionHeading>
         </Reveal>
 
-        <Reveal delay={100} className="mt-14">
+        <Reveal className="mt-14">
           <div className="grid gap-6 lg:grid-cols-3">
             {news.map((item) => (
               <article key={item.title} className="group flex flex-col bg-ink transition-transform duration-300 hover:-translate-y-1">

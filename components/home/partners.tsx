@@ -21,7 +21,7 @@ export function Partners() {
         </div>
       </Reveal>
 
-      <Reveal delay={120}>
+      <Reveal>
         <ul className="grid gap-px border border-white/10 bg-white/10 sm:grid-cols-2">
           {partnerOffers.map((offer, index) => (
             <li

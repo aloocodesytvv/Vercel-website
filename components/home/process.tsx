@@ -17,7 +17,7 @@ export function Process() {
         </SectionHeading>
       </Reveal>
 
-      <Reveal delay={100} className="mt-14">
+      <Reveal className="mt-14">
         <ol className="grid gap-px border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, index) => (
             <li
