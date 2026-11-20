@@ -4,12 +4,21 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
-export function AdminNav({ unreadMessages, newApplications }: { unreadMessages: number; newApplications: number }) {
+export function AdminNav({
+  unreadMessages,
+  newApplications,
+  pendingBoard,
+}: {
+  unreadMessages: number
+  newApplications: number
+  pendingBoard: number
+}) {
   const pathname = usePathname()
   const links = [
     { href: '/admin', label: 'Overview', badge: 0, exact: true },
     { href: '/admin/applications', label: 'Applications', badge: newApplications, exact: false },
     { href: '/admin/messages', label: 'Messages', badge: unreadMessages, exact: false },
+    { href: '/admin/board', label: 'Board', badge: pendingBoard, exact: false },
   ]
   return (
     <nav aria-label="Admin" className="-mx-5 flex gap-1 overflow-x-auto px-5 md:mx-0 md:px-0">

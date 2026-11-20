@@ -14,6 +14,44 @@ export const site = {
   ],
 } as const
 
+export type BoardCategory = 'organisation' | 'coach' | 'analyst' | 'caster' | 'store'
+
+export const boardCategories: { id: BoardCategory; label: string; tag: string }[] = [
+  { id: 'organisation', label: 'Organisation', tag: 'Org' },
+  { id: 'coach', label: 'Coach', tag: 'Coach' },
+  { id: 'analyst', label: 'Analyst', tag: 'Analyst' },
+  { id: 'caster', label: 'Caster', tag: 'Caster' },
+  { id: 'store', label: 'Store', tag: 'Store' },
+]
+
+export const getBoardCategory = (id: string) => boardCategories.find((item) => item.id === id)
+
+// Featured duration in days. 0 = a standard (blue) listing, no featuring.
+// Prices set by the user 2026-11-20 (₹1 less than the round numbers).
+export const boardDurations = [0, 1, 2, 3, 4, 5, 6, 7] as const
+
+export const boardFeaturedPrices: Record<number, number> = {
+  1: 29,
+  2: 39,
+  3: 49,
+  4: 59,
+  5: 69,
+  6: 79,
+  7: 89,
+}
+
+export const boardDurationLabel = (days: number) =>
+  days > 0 ? `${days} day${days === 1 ? '' : 's'} featured · ₹${boardFeaturedPrices[days]}` : 'Standard listing'
+
+// Card banners: the user's friend's artwork, used with permission.
+export const boardBanners = ['/art/board-banner-slash.jpg', '/art/board-banner-oni.jpg', '/art/board-banner-neon.jpg'] as const
+
+export const boardBannerFor = (seed: string) => {
+  let hash = 0
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0
+  return boardBanners[hash % boardBanners.length]
+}
+
 export type RoleId = 'gold' | 'exp' | 'mid' | 'jungle' | 'roam' | 'staff'
 
 export type Role = {

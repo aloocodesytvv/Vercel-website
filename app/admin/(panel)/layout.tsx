@@ -19,9 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await requireAdmin()
   await ensureSchema()
   const sql = getSql()
-  const [apps, messages] = await Promise.all([
+  const [apps, messages, board] = await Promise.all([
     sql`SELECT COUNT(*)::int AS n FROM applications WHERE status = 'new'`,
     sql`SELECT COUNT(*)::int AS n FROM contact_messages WHERE status = 'new'`,
+    sql`SELECT COUNT(*)::int AS n FROM board_posts WHERE status = 'pending'`,
   ])
 
   return (
@@ -39,7 +40,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </button>
             </form>
           </div>
-          <AdminNav unreadMessages={messages[0].n} newApplications={apps[0].n} />
+          <AdminNav unreadMessages={messages[0].n} newApplications={apps[0].n} pendingBoard={board[0].n} />
           <div className="hidden items-center gap-5 md:flex">
             <Link href="/" target="_blank" className="text-xs font-bold uppercase tracking-widest text-mute hover:text-bone">
               View site

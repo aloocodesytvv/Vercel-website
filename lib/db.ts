@@ -48,6 +48,29 @@ export type MessageRow = {
   created_at: string
 }
 
+export type BoardPostRow = {
+  id: number
+  category: string
+  org_name: string
+  title: string
+  detail: string
+  role_needed: string
+  rank: string
+  speciality: string
+  experience: string
+  languages: string
+  sells: string
+  buy_how: string
+  instagram: string
+  logo: string
+  banner: string
+  featured_days: number
+  status: string
+  discord_sent: boolean
+  created_at: string
+  updated_at: string
+}
+
 export function getSql() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL is not configured')
@@ -118,6 +141,29 @@ export function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`
       await sql`CREATE INDEX IF NOT EXISTS applications_created_idx ON applications (created_at DESC)`
+      await sql`CREATE TABLE IF NOT EXISTS board_posts (
+        id SERIAL PRIMARY KEY,
+        category TEXT NOT NULL,
+        org_name TEXT NOT NULL,
+        title TEXT NOT NULL,
+        detail TEXT NOT NULL DEFAULT '',
+        role_needed TEXT NOT NULL DEFAULT '',
+        rank TEXT NOT NULL DEFAULT '',
+        speciality TEXT NOT NULL DEFAULT '',
+        experience TEXT NOT NULL DEFAULT '',
+        languages TEXT NOT NULL DEFAULT '',
+        sells TEXT NOT NULL DEFAULT '',
+        buy_how TEXT NOT NULL DEFAULT '',
+        instagram TEXT NOT NULL DEFAULT '',
+        logo TEXT NOT NULL DEFAULT '',
+        banner TEXT NOT NULL DEFAULT '',
+        featured_days INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending',
+        discord_sent BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`
+      await sql`CREATE INDEX IF NOT EXISTS board_posts_status_idx ON board_posts (status, created_at DESC)`
     })().catch((error) => {
       ready = null
       throw error

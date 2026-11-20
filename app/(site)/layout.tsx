@@ -1,5 +1,6 @@
 import { Footer } from '@/components/site/footer'
 import { Header } from '@/components/site/header'
+import { IconRail } from '@/components/site/icon-rail'
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,8 +12,13 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         Skip to content
       </a>
       <Header />
-      <main id="main">{children}</main>
-      <Footer />
+      <IconRail />
+      <div className="md:pl-[4.5rem]">
+        <main id="main" className="pb-16 md:pb-0">
+          {children}
+        </main>
+        <Footer />
+      </div>
     </>
   )
 }

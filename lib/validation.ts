@@ -1,4 +1,4 @@
-import { experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics } from './site'
+import { boardCategories, experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics } from './site'
 
 export type Track = 'player' | 'staff'
 
@@ -205,5 +205,91 @@ export function validateContact(input: ContactInput): ContactErrors {
   if (!emailPattern.test(input.email)) errors.email = 'Enter a valid email address.'
   if (input.message.length < 20) errors.message = 'Tell us a bit more (20+ characters).'
   if (input.message.length > 2000) errors.message = 'Please keep this under 2000 characters.'
+  return errors
+}
+
+export type BoardPostInput = {
+  category: string
+  orgName: string
+  title: string
+  detail: string
+  roleNeeded: string
+  rank: string
+  speciality: string
+  experience: string
+  languages: string
+  sells: string
+  buyHow: string
+  instagram: string
+  logo: string
+  featuredDays: number
+  website: string
+}
+
+export type BoardPostErrors = Partial<Record<keyof BoardPostInput, string>>
+
+export const emptyBoardPost: BoardPostInput = {
+  category: 'organisation',
+  orgName: '',
+  title: '',
+  detail: '',
+  roleNeeded: '',
+  rank: '',
+  speciality: '',
+  experience: '',
+  languages: '',
+  sells: '',
+  buyHow: '',
+  instagram: '',
+  logo: '',
+  featuredDays: 0,
+  website: '',
+}
+
+export function cleanBoardPost(raw: Partial<Record<keyof BoardPostInput, unknown>>): BoardPostInput {
+  const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '')
+  const days = Number(raw.featuredDays)
+  return {
+    category: text(raw.category, 20),
+    orgName: text(raw.orgName, 80),
+    title: text(raw.title, 120),
+    detail: text(raw.detail, 400),
+    roleNeeded: text(raw.roleNeeded, 20),
+    rank: text(raw.rank, 40),
+    speciality: text(raw.speciality, 120),
+    experience: text(raw.experience, 20),
+    languages: text(raw.languages, 120),
+    sells: text(raw.sells, 20),
+    buyHow: text(raw.buyHow, 240),
+    instagram: text(raw.instagram, 80),
+    logo: typeof raw.logo === 'string' ? raw.logo.slice(0, 600_000) : '',
+    featuredDays: [0, 1, 2, 3, 4, 5, 6, 7].includes(days) ? days : 0,
+    website: text(raw.website, 100),
+  }
+}
+
+export function validateBoardPost(input: BoardPostInput): BoardPostErrors {
+  const errors: BoardPostErrors = {}
+  if (!boardCategories.some((item) => item.id === input.category)) errors.category = 'Choose what you are.'
+  if (input.orgName.length < 2) errors.orgName = 'Enter the organisation or your name.'
+  if (input.title.length < 5) errors.title = 'Give the post a short title (5+ characters).'
+  if (input.detail.length < 10) errors.detail = 'Add a short line about the requirement (10+ characters).'
+  if (!input.instagram) errors.instagram = 'Add an Instagram handle so people can reach you.'
+  if (input.category === 'organisation') {
+    if (!input.roleNeeded) errors.roleNeeded = 'Choose the role you need.'
+    if (!input.rank) errors.rank = 'Choose a rank.'
+  }
+  if (input.category === 'coach' || input.category === 'analyst') {
+    if (input.speciality.length < 3) errors.speciality = 'Tell us what you coach or analyse.'
+    if (!input.experience) errors.experience = 'Choose your experience level.'
+  }
+  if (input.category === 'caster') {
+    if (input.languages.length < 2) errors.languages = 'List the languages you cast in.'
+    if (!input.experience) errors.experience = 'Choose your experience level.'
+  }
+  if (input.category === 'store') {
+    if (!input.sells) errors.sells = 'Choose what you sell.'
+    if (input.buyHow.length < 5) errors.buyHow = 'Tell people how to buy from you.'
+  }
   return errors
 }
