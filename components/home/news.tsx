@@ -2,19 +2,23 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { SectionHeading } from '@/components/site/section-heading'
+import { Reveal } from '@/components/site/reveal'
 import { news } from '@/lib/site'
 
 export function News() {
   return (
     <section id="news" className="border-y border-white/10 bg-panel">
       <div className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
-        <SectionHeading index="04" eyebrow="News & updates" title={<>From the <span className="text-ember">org.</span></>}>
-          Announcements, standards and open doors from the Ashen Wings team.
-        </SectionHeading>
+        <Reveal>
+          <SectionHeading index="04" eyebrow="News & updates" title={<>From the <span className="text-ember">org.</span></>}>
+            Announcements, standards and open doors from the Ashen Wings team.
+          </SectionHeading>
+        </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {news.map((item) => (
-            <article key={item.title} className="group flex flex-col bg-ink">
+        <Reveal delay={100} className="mt-14">
+          <div className="grid gap-6 lg:grid-cols-3">
+            {news.map((item) => (
+              <article key={item.title} className="group flex flex-col bg-ink transition-transform duration-300 hover:-translate-y-1">
               <div className="relative aspect-[16/10] overflow-hidden">
                 <Image
                   src={item.image}
@@ -42,7 +46,8 @@ export function News() {
               </div>
             </article>
           ))}
-        </div>
+          </div>
+        </Reveal>
       </div>
     </section>
   )

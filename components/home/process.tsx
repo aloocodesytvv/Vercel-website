@@ -1,4 +1,5 @@
 import { SectionHeading } from '@/components/site/section-heading'
+import { Reveal } from '@/components/site/reveal'
 
 const steps = [
   { title: 'Apply', text: 'Fill in the form. It takes about five minutes and you get a tracking code instantly.' },
@@ -10,19 +11,26 @@ const steps = [
 export function Process() {
   return (
     <section id="process" className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
-      <SectionHeading index="03" eyebrow="How it works" title={<>From form to <span className="text-ember">roster.</span></>}>
-        A clear path with no ghosting. You can follow your application any time with your tracking code.
-      </SectionHeading>
+      <Reveal>
+        <SectionHeading index="03" eyebrow="How it works" title={<>From form to <span className="text-ember">roster.</span></>}>
+          A clear path with no ghosting. You can follow your application any time with your tracking code.
+        </SectionHeading>
+      </Reveal>
 
-      <ol className="mt-14 grid gap-px border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-4">
-        {steps.map((step, index) => (
-          <li key={step.title} className="group relative flex flex-col gap-4 bg-ink p-7 transition-colors hover:bg-panel">
-            <span className="display text-outline text-7xl text-ember/60 transition-colors group-hover:text-ember">0{index + 1}</span>
-            <h3 className="display text-3xl text-bone">{step.title}</h3>
-            <p className="text-sm leading-relaxed text-mute">{step.text}</p>
-          </li>
-        ))}
-      </ol>
+      <Reveal delay={100} className="mt-14">
+        <ol className="grid gap-px border border-white/10 bg-white/10 md:grid-cols-2 lg:grid-cols-4">
+          {steps.map((step, index) => (
+            <li
+              key={step.title}
+              className="group relative flex flex-col gap-4 bg-ink p-7 transition-all duration-300 hover:-translate-y-1 hover:bg-panel"
+            >
+              <span className="display text-outline text-7xl text-ember/60 transition-colors group-hover:text-ember">0{index + 1}</span>
+              <h3 className="display text-3xl text-bone">{step.title}</h3>
+              <p className="text-sm leading-relaxed text-mute">{step.text}</p>
+            </li>
+          ))}
+        </ol>
+      </Reveal>
     </section>
   )
 }

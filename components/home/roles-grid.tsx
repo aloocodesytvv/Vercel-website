@@ -2,24 +2,28 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowUpRight } from 'lucide-react'
 import { SectionHeading } from '@/components/site/section-heading'
+import { Reveal } from '@/components/site/reveal'
 import { roles } from '@/lib/site'
 
 export function RolesGrid() {
   return (
     <section id="roles" className="border-y border-white/10 bg-panel">
       <div className="mx-auto max-w-7xl px-5 py-24 md:px-8 md:py-32">
-        <SectionHeading index="02" eyebrow="Open positions" title={<>Choose your <span className="text-ember">role.</span></>}>
-          Five lanes and a full back-office. Tell us where you fit and we will take it from there.
-        </SectionHeading>
+        <Reveal>
+          <SectionHeading index="02" eyebrow="Open positions" title={<>Choose your <span className="text-ember">role.</span></>}>
+            Five lanes and a full back-office. Tell us where you fit and we will take it from there.
+          </SectionHeading>
+        </Reveal>
 
-        <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {roles.map((role, index) => (
-            <li key={role.id}>
-              <Link
-                href={role.player ? `/recruitment?track=player&role=${role.id}` : '/recruitment?track=staff'}
-                className="group clip-cut relative block aspect-[4/5] overflow-hidden bg-ink"
-                aria-label={`Apply as ${role.name}`}
-              >
+        <Reveal delay={100} className="mt-14">
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {roles.map((role, index) => (
+              <li key={role.id}>
+                <Link
+                  href={role.player ? `/recruitment?track=player&role=${role.id}` : '/recruitment?track=staff'}
+                  className="group clip-cut relative block aspect-[4/5] overflow-hidden bg-ink transition-transform duration-300 hover:-translate-y-1"
+                  aria-label={`Apply as ${role.name}`}
+                >
                 <Image
                   src={role.image}
                   alt={`${role.hero} — ${role.skin} splash art from Mobile Legends: Bang Bang`}
@@ -44,7 +48,8 @@ export function RolesGrid() {
               </Link>
             </li>
           ))}
-        </ul>
+          </ul>
+        </Reveal>
       </div>
     </section>
   )

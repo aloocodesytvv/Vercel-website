@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { SectionHeading } from '@/components/site/section-heading'
+import { Reveal } from '@/components/site/reveal'
 import { btn } from '@/lib/ui'
 
 const pillars = [
@@ -13,7 +14,7 @@ const pillars = [
 export function About() {
   return (
     <section id="about" className="mx-auto grid max-w-7xl gap-14 px-5 py-24 md:px-8 md:py-32 lg:grid-cols-[1.05fr_1fr] lg:items-center">
-      <div className="flex flex-col gap-10">
+      <Reveal className="flex flex-col gap-10">
         <SectionHeading index="01" eyebrow="Who we are" title={<>Built from <span className="text-ember">zero.</span> Built to win.</>}>
           Ashen Wings is a new Mobile Legends: Bang Bang organisation with big goals and a small, focused team. We would rather earn
           respect with results and professionalism than borrow it with hype.
@@ -30,9 +31,9 @@ export function About() {
             </li>
           ))}
         </ul>
-      </div>
+      </Reveal>
 
-      <div className="relative">
+      <Reveal delay={120} className="relative">
         <div className="clip-cut relative aspect-[4/3] overflow-hidden bg-panel lg:aspect-[5/6]">
           <Image
             src="/art/landing-khufra.jpg"
@@ -54,7 +55,7 @@ export function About() {
             </Link>
           </div>
         </div>
-      </div>
+      </Reveal>
     </section>
   )
 }
