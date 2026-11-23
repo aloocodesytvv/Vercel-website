@@ -2,7 +2,7 @@ name: Apply patch
 on:
   push:
     branches: [board-post-types]
-    paths: [board-post-types.patch]
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
