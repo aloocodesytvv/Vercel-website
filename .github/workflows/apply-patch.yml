@@ -1,0 +1,26 @@
+name: Apply patch
+on:
+  push:
+    branches: [board-post-types]
+    paths: [board-post-types.patch]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: board-post-types
+      - run: |
+          git config user.name "aloocodesytvv"
+          git config user.email "khaogealoo780@gmail.com"
+          git apply --check board-post-types.patch
+          git apply board-post-types.patch
+          git status --short
+          rm board-post-types.patch
+          rm .github/workflows/apply-patch.yml
+          git add -A
+          git status --short
+          git commit -m "Board: promote vs requirement post types, Streamer, and owner admin controls"
+          git push
