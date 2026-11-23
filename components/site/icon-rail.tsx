@@ -11,7 +11,6 @@ import {
   LayoutGrid,
   MessageCircle,
   MessageSquareText,
-  UserPlus,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -27,7 +26,6 @@ type RailItem = {
 const items: RailItem[] = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/board', label: 'Board', icon: LayoutGrid },
-  { href: '/recruitment', label: 'Join', icon: UserPlus },
   { href: '/recruitment', label: 'Recruitment', icon: ClipboardList },
   { href: '/partners', label: 'Partners', icon: Handshake },
   { href: '/faq', label: 'FAQ', icon: CircleHelp },
