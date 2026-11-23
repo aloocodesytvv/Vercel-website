@@ -1,0 +1,593 @@
+diff --git a/app/admin/(panel)/applications/[id]/page.tsx b/app/admin/(panel)/applications/[id]/page.tsx
+index 8e90a574..3f1d731a 100644
+--- a/app/admin/(panel)/applications/[id]/page.tsx
++++ b/app/admin/(panel)/applications/[id]/page.tsx
+@@ -7,7 +7,7 @@ import { DiscordDot, fullDate } from '@/components/admin/helpers'
+ import { StatusBadge } from '@/components/site/status-badge'
+ import { deleteApplicationAction, updateApplicationAction } from '@/lib/actions'
+ import { ensureSchema, getSql, type ApplicationRow } from '@/lib/db'
+-import { experienceLevels, getRole, statuses } from '@/lib/site'
++import { experienceLevels, genderLabel, getRole, statuses, trialLabel } from '@/lib/site'
+ import { btn } from '@/lib/ui'
+ 
+ export const metadata: Metadata = { title: 'Application' }
+@@ -73,6 +73,7 @@ export default async function ApplicationDetailPage({
+         { label: 'Email', value: app.email },
+         { label: 'Discord', value: app.discord },
+         { label: 'Age', value: String(app.age) },
++        { label: 'Gender', value: genderLabel(app.gender) || '-' },
+         { label: 'Timezone', value: app.timezone },
+         { label: 'In-game name', value: app.ign || '-' },
+         { label: 'Rank', value: app.rank || '-' },
+@@ -82,6 +83,7 @@ export default async function ApplicationDetailPage({
+         { label: 'Flex lane', value: app.flex_lane || '-' },
+         { label: 'Shot-calling', value: app.shotcalling || '-' },
+         { label: 'Availability', value: app.availability },
++        { label: 'Trial time', value: trialLabel(app.trial_day ?? '', app.trial_time ?? '') },
+       ]
+ 
+   return (
+diff --git a/app/admin/(panel)/applications/page.tsx b/app/admin/(panel)/applications/page.tsx
+index 722c92a7..2f6045af 100644
+--- a/app/admin/(panel)/applications/page.tsx
++++ b/app/admin/(panel)/applications/page.tsx
+@@ -4,7 +4,7 @@ import { Download, Search } from 'lucide-react'
+ import { DiscordDot, Rating, timeAgo } from '@/components/admin/helpers'
+ import { StatusBadge } from '@/components/site/status-badge'
+ import { ensureSchema, getSql, type ApplicationRow } from '@/lib/db'
+-import { getRole, roles, statuses } from '@/lib/site'
++import { genderLabel, getRole, roles, statuses, trialLabel } from '@/lib/site'
+ import { btn } from '@/lib/ui'
+ import { cn } from '@/lib/utils'
+ 
+@@ -115,7 +115,12 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
+                       {app.track === 'staff' ? 'Staff' : 'Player'}
+                     </span>
+                   </span>
+-                  <span className="text-xs text-mute">{app.track === 'staff' ? app.experience || 'No experience' : app.rank || 'No rank'}</span>
++                  <span className="text-xs text-mute">
++                    {app.track === 'staff'
++                      ? app.experience || 'No experience'
++                      : `${app.rank || 'No rank'}${app.gender ? ` · ${genderLabel(app.gender)}` : ''}`}
++                  </span>
++                  {app.track === 'player' && <span className="text-xs text-mute">Trial: {trialLabel(app.trial_day ?? '', app.trial_time ?? '')}</span>}
+                 </div>
+                 <div>
+                   <StatusBadge status={app.status} />
+diff --git a/app/admin/(panel)/board/page.tsx b/app/admin/(panel)/board/page.tsx
+index 11fafed8..cbacf8a7 100644
+--- a/app/admin/(panel)/board/page.tsx
++++ b/app/admin/(panel)/board/page.tsx
+@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
+ import Image from 'next/image'
+ import Link from 'next/link'
+ import { ConfirmButton } from '@/components/admin/confirm-button'
+-import { timeAgo } from '@/components/admin/helpers'
+-import { boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
++import { fullDate, timeAgo } from '@/components/admin/helpers'
++import { boardDurationLabel, getBoardCategory, getBoardContactMethod, isPostFeatured } from '@/lib/site'
+ import { deleteBoardPostAction, setBoardPostFeaturedAction, setBoardPostStatusAction } from '@/lib/actions'
+ import { ensureSchema, getSql, type BoardPostRow } from '@/lib/db'
+ import { btn } from '@/lib/ui'
+@@ -26,7 +26,7 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
+     LIMIT 200`) as BoardPostRow[]
+   const pending = rows.filter((row) => row.status === 'pending').length
+   const live = rows.filter((row) => row.status === 'approved').length
+-  const featured = rows.filter((row) => row.status === 'approved' && row.featured_days > 0).length
++  const featured = rows.filter((row) => row.status === 'approved' && isPostFeatured(row.featured_days, row.featured_until)).length
+   const declined = rows.filter((row) => row.status === 'declined').length
+ 
+   return (
+@@ -64,6 +64,8 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
+             const category = getBoardCategory(post.category)
+             const contactMethod = getBoardContactMethod(post.contact_type || 'instagram')
+             const contactValue = post.contact_value || post.instagram
++            const activeFeatured = isPostFeatured(post.featured_days, post.featured_until)
++            const expiredFeatured = post.featured_days > 0 && !activeFeatured
+             const specifics = [
+               post.role_needed ? `Role: ${post.role_needed}` : '',
+               post.rank ? `Rank: ${post.rank}` : '',
+@@ -96,9 +98,23 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
+                     <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-bone/80">
+                       {post.post_type === 'promote' ? 'Promote' : 'Requirement'}
+                     </span>
+-                    <span className="bg-gold/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
+-                      {boardDurationLabel(post.featured_days, post.owner_added)}
+-                    </span>
++                    {expiredFeatured ? (
++                      <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-mute">
++                        Featured expired
++                      </span>
++                    ) : (
++                      <span className="bg-gold/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
++                        {boardDurationLabel(post.featured_days, post.owner_added)}
++                      </span>
++                    )}
++                    {activeFeatured && post.featured_until && (
++                      <span className="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold/80">
++                        Featured until {fullDate(post.featured_until)}
++                      </span>
++                    )}
++                    {activeFeatured && !post.featured_until && (
++                      <span className="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-mute">No expiry set</span>
++                    )}
+                     {post.owner_added && (
+                       <span className="bg-ember/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-ember">
+                         Added by you
+diff --git a/app/api/applications/route.ts b/app/api/applications/route.ts
+index 9ef59b50..258aaf09 100644
+--- a/app/api/applications/route.ts
++++ b/app/api/applications/route.ts
+@@ -34,10 +34,11 @@ export async function POST(request: Request) {
+     const code = trackingCode(input.track)
+     const rows = (await sql`INSERT INTO applications
+       (code, track, role, name, email, discord, age, ign, game_id, server_id, rank, main_heroes, experience, availability, timezone, links, message,
+-       staff_role, portfolio, tools, hours, past_teams, pitch, flex_lane, shotcalling)
++       staff_role, portfolio, tools, hours, past_teams, pitch, flex_lane, shotcalling, trial_day, trial_time, gender)
+       VALUES (${code}, ${input.track}, ${roleKey}, ${input.name}, ${input.email}, ${input.discord}, ${Number(input.age)}, ${input.ign}, ${input.gameId},
+         ${input.serverId}, ${input.rank}, ${input.mainHeroes}, ${input.experience}, ${input.availability}, ${input.timezone}, ${input.links}, ${input.message},
+-        ${input.staffRole}, ${input.portfolio}, ${input.tools}, ${input.hours}, ${input.pastTeams}, ${input.pitch}, ${input.flexLane}, ${input.shotcalling})
++        ${input.staffRole}, ${input.portfolio}, ${input.tools}, ${input.hours}, ${input.pastTeams}, ${input.pitch}, ${input.flexLane}, ${input.shotcalling},
++        ${input.trialDay}, ${input.trialTime}, ${input.gender})
+       RETURNING *`) as ApplicationRow[]
+ 
+     const saved = rows[0]
+diff --git a/app/api/applications/status/route.ts b/app/api/applications/status/route.ts
+index 1dd72f67..be48e345 100644
+--- a/app/api/applications/status/route.ts
++++ b/app/api/applications/status/route.ts
+@@ -1,6 +1,6 @@
+ import { NextResponse } from 'next/server'
+ import { ensureSchema, getSql } from '@/lib/db'
+-import { getRole, getStatus } from '@/lib/site'
++import { genderLabel, getRole, getStatus, trialLabel } from '@/lib/site'
+ 
+ export async function POST(request: Request) {
+   const body = await request.json().catch(() => ({}))
+@@ -10,13 +10,14 @@ export async function POST(request: Request) {
+ 
+   try {
+     await ensureSchema()
+-    const rows = await getSql()`SELECT role, status, public_note, created_at, updated_at FROM applications
++    const rows = await getSql()`SELECT role, status, public_note, trial_day, trial_time, gender, created_at, updated_at FROM applications
+       WHERE code = ${code} AND email = ${email} LIMIT 1`
+     if (!rows.length) {
+       return NextResponse.json({ ok: false, error: 'No application matches that code and email.' }, { status: 404 })
+     }
+     const row = rows[0]
+     const status = getStatus(row.status)
++    const trial = trialLabel(row.trial_day ?? '', row.trial_time ?? '')
+     return NextResponse.json({
+       ok: true,
+       role: getRole(row.role)?.name ?? row.role,
+@@ -24,6 +25,8 @@ export async function POST(request: Request) {
+       label: status.label,
+       message: status.publicText,
+       note: row.public_note || null,
++      trial: trial === 'Not given' ? null : trial,
++      gender: genderLabel(row.gender ?? '') || null,
+       submitted: row.created_at,
+       updated: row.updated_at,
+     })
+diff --git a/app/api/board-posts/route.ts b/app/api/board-posts/route.ts
+index b1041ce3..04de95f8 100644
+--- a/app/api/board-posts/route.ts
++++ b/app/api/board-posts/route.ts
+@@ -26,6 +26,7 @@ const publicPost = (row: BoardPostRow) => ({
+   logo: row.logo,
+   banner: row.banner,
+   featuredDays: row.featured_days,
++  featuredUntil: row.featured_until,
+   createdAt: row.created_at,
+ })
+ 
+@@ -39,8 +40,9 @@ export async function GET(request: Request) {
+     const rows = (await sql`SELECT * FROM board_posts
+       WHERE status = 'approved'
+         AND (${category} = '' OR category = ${category})
+-        AND (${featuredOnly ? 1 : 0} = 0 OR featured_days > 0)
+-      ORDER BY featured_days DESC, created_at DESC
++        AND (${featuredOnly ? 1 : 0} = 0 OR (featured_days > 0 AND (featured_until IS NULL OR featured_until > NOW())))
++      ORDER BY (CASE WHEN featured_days > 0 AND (featured_until IS NULL OR featured_until > NOW()) THEN 1 ELSE 0 END) DESC,
++        featured_days DESC, created_at DESC
+       LIMIT 100`) as BoardPostRow[]
+     return NextResponse.json({ ok: true, posts: rows.map(publicPost) })
+   } catch (error) {
+diff --git a/components/board/board-card.tsx b/components/board/board-card.tsx
+index 0cef333c..3686f43b 100644
+--- a/components/board/board-card.tsx
++++ b/components/board/board-card.tsx
+@@ -1,5 +1,5 @@
+ import Image from 'next/image'
+-import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
++import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod, isPostFeatured } from '@/lib/site'
+ import { cn } from '@/lib/utils'
+ 
+ export type BoardPost = {
+@@ -23,6 +23,7 @@ export type BoardPost = {
+   logo: string
+   banner: string
+   featuredDays: number
++  featuredUntil: string | null
+   createdAt: string
+ }
+ 
+@@ -41,7 +42,7 @@ function Avatar({ post }: { post: BoardPost }) {
+ }
+ 
+ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
+-  const featured = post.featuredDays > 0
++  const featured = isPostFeatured(post.featuredDays, post.featuredUntil)
+   const isPromote = post.postType === 'promote'
+   const category = getBoardCategory(post.category)
+   const chips = [
+diff --git a/components/forms/recruitment-form.tsx b/components/forms/recruitment-form.tsx
+index 18d42ed3..78cd63ae 100644
+--- a/components/forms/recruitment-form.tsx
++++ b/components/forms/recruitment-form.tsx
+@@ -4,7 +4,7 @@ import Image from 'next/image'
+ import Link from 'next/link'
+ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+ import { ArrowLeft, ArrowRight, Check, Copy, LoaderCircle } from 'lucide-react'
+-import { experienceLevels, getRole, ranks, roles, staffExperienceLevels, staffRoles } from '@/lib/site'
++import { experienceLevels, genderLabel, getRole, ranks, roles, staffExperienceLevels, staffRoles, trialLabel, trialTimeSlots } from '@/lib/site'
+ import { btn } from '@/lib/ui'
+ import { cn } from '@/lib/utils'
+ import {
+@@ -36,6 +36,18 @@ const shotcallingOptions = [
+   { value: 'sometimes', label: 'Sometimes' },
+   { value: 'no', label: 'No — I follow calls' },
+ ]
++const genderOptions = [
++  { value: 'male', label: 'Male' },
++  { value: 'female', label: 'Female' },
++]
++
++// Today's date in the viewer's local timezone, for the trial-day picker.
++const todayIso = () => {
++  const now = new Date()
++  const month = String(now.getMonth() + 1).padStart(2, '0')
++  const day = String(now.getDate()).padStart(2, '0')
++  return `${now.getFullYear()}-${month}-${day}`
++}
+ 
+ const playerRoles = roles.filter((role) => role.player)
+ 
+@@ -366,6 +378,7 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
+                 <div className="grid gap-6 sm:grid-cols-2">
+                   <TextField id="name" label="Full name" autoComplete="name" placeholder="Your name" {...bind('name')} />
+                   <TextField id="age" label="Age" type="number" inputMode="numeric" min={13} max={60} placeholder="18" {...bind('age')} />
++                  <DropdownField id="gender" label="Gender" options={genderOptions} value={values.gender} error={errors.gender} onValueChange={setValue('gender')} />
+                   <TextField id="email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" {...bind('email')} />
+                   <TextField id="discord" label="Discord username" placeholder="username" hint="We contact you here. Keep DMs open." {...bind('discord')} />
+                 </div>
+@@ -445,6 +458,27 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
+                   <TextField id="timezone" label="Timezone / country" placeholder="e.g. IST, Philippines" {...bind('timezone')} />
+                 </div>
+                 <TextField id="availability" label="Availability" placeholder="e.g. Weekdays 7-11pm, weekends all day" {...bind('availability')} />
++                <div className="grid gap-6 sm:grid-cols-2">
++                  <TextField
++                    id="trialDay"
++                    label="Trial day"
++                    type="date"
++                    min={todayIso()}
++                    optional
++                    hint="Pick a day that suits you for the trial scrim."
++                    {...bind('trialDay')}
++                  />
++                  <DropdownField
++                    id="trialTime"
++                    label="Trial time (IST)"
++                    options={trialTimeSlots}
++                    optional
++                    hint="Pick a time slot that suits you."
++                    value={values.trialTime}
++                    error={errors.trialTime}
++                    onValueChange={setValue('trialTime')}
++                  />
++                </div>
+               </div>
+             )}
+ 
+@@ -523,12 +557,19 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
+                   {[
+                     { label: 'Track', value: track === 'staff' ? 'Staff & Creators' : 'Player', goTo: 0 },
+                     { label: 'Role', value: role?.name, goTo: 0 },
+-                    { label: 'Applicant', value: `${values.name}, ${values.age}`, goTo: 0 },
++                    {
++                      label: 'Applicant',
++                      value: track === 'staff' ? `${values.name}, ${values.age}` : `${values.name}, ${values.age}${values.gender ? ` · ${genderLabel(values.gender)}` : ''}`,
++                      goTo: 0,
++                    },
+                     { label: 'Contact', value: `${values.email} / ${values.discord}`, goTo: 0 },
+                     track === 'staff'
+                       ? { label: 'Experience', value: `${values.experience} · ${values.hours}`, goTo: 1 }
+                       : { label: 'Game profile', value: [values.ign, values.rank, values.mainHeroes].filter(Boolean).join(' / ') || 'Not provided', goTo: 1 },
+                     { label: 'Availability', value: `${values.availability} (${values.timezone})`, goTo: 1 },
++                    ...(track === 'player'
++                      ? [{ label: 'Trial time', value: trialLabel(values.trialDay, values.trialTime), goTo: 1 }]
++                      : []),
+                     { label: 'Your story', value: values.message, goTo: 2 },
+                   ].map((row) => (
+                     <div key={row.label} className="flex items-start justify-between gap-4 p-4">
+diff --git a/components/forms/status-form.tsx b/components/forms/status-form.tsx
+index 163a8700..895cf123 100644
+--- a/components/forms/status-form.tsx
++++ b/components/forms/status-form.tsx
+@@ -13,6 +13,8 @@ type Result = {
+   label: string
+   message: string
+   note: string | null
++  trial: string | null
++  gender: string | null
+   submitted: string
+   updated: string
+ }
+@@ -100,6 +102,13 @@ export function StatusForm() {
+             <p className="display text-4xl text-bone md:text-5xl">{result.label}</p>
+             <p className="text-sm leading-relaxed text-mute md:text-base">{result.message}</p>
+ 
++            {(result.gender || result.trial) && (
++              <div className="flex flex-col gap-1 border-t border-white/10 pt-4 text-sm text-bone/85">
++                {result.gender && <p>Gender: {result.gender}</p>}
++                {result.trial && <p>Trial time: {result.trial}</p>}
++              </div>
++            )}
++
+             {result.note && (
+               <p className="border-l-2 border-ember bg-ember/10 p-4 text-sm text-bone/85">
+                 <span className="mb-1 block text-[0.65rem] font-bold uppercase tracking-[0.2em] text-ember">Note from the team</span>
+diff --git a/lib/actions.ts b/lib/actions.ts
+index 4dad6744..5252841e 100644
+--- a/lib/actions.ts
++++ b/lib/actions.ts
+@@ -77,7 +77,12 @@ export async function setBoardPostStatusAction(formData: FormData) {
+   const status = String(formData.get('status') ?? '')
+   if (!Number.isInteger(id) || !['approved', 'declined', 'pending'].includes(status)) return
+   const sql = getSql()
+-  await sql`UPDATE board_posts SET status = ${status}, updated_at = NOW() WHERE id = ${id}`
++  // Approving a featured post starts its featuring clock now.
++  await sql`UPDATE board_posts
++    SET status = ${status}, updated_at = NOW(),
++      featured_until = CASE WHEN ${status} = 'approved' AND featured_days > 0
++        THEN NOW() + featured_days * INTERVAL '1 day' ELSE featured_until END
++    WHERE id = ${id}`
+   revalidatePath('/admin/board')
+   revalidatePath('/board')
+   revalidatePath('/')
+@@ -96,13 +101,15 @@ export async function addBoardPostAction(input: BoardPostInput): Promise<{ ok: b
+   await ensureSchema()
+   const sql = getSql()
+   const banner = boardBannerFor(`${cleaned.orgName}:${cleaned.title}`)
++  // Owner posts go live featured straight away, so the clock starts now.
++  const featuredUntil = new Date(Date.now() + cleaned.featuredDays * 86400000).toISOString()
+   await sql`INSERT INTO board_posts
+     (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how,
+-     instagram, contact_type, contact_value, logo, banner, featured_days, status, owner_added)
++     instagram, contact_type, contact_value, logo, banner, featured_days, featured_until, status, owner_added)
+     VALUES (${cleaned.category}, ${cleaned.postType}, ${cleaned.orgName}, ${cleaned.title}, ${cleaned.detail}, ${cleaned.roleNeeded},
+       ${cleaned.rank}, ${cleaned.speciality}, ${cleaned.experience}, ${cleaned.languages}, ${cleaned.sells},
+       ${cleaned.buyHow}, ${cleaned.instagram}, ${cleaned.contactType}, ${cleaned.contact}, ${cleaned.logo},
+-      ${banner}, ${cleaned.featuredDays}, 'approved', TRUE)`
++      ${banner}, ${cleaned.featuredDays}, ${featuredUntil}, 'approved', TRUE)`
+   revalidatePath('/admin/board')
+   revalidatePath('/board')
+   revalidatePath('/')
+@@ -118,7 +125,12 @@ export async function setBoardPostFeaturedAction(formData: FormData) {
+   const days = Number(formData.get('featuredDays'))
+   if (!Number.isInteger(id) || ![0, 1, 2, 3, 4, 5, 6, 7].includes(days)) return
+   const sql = getSql()
+-  await sql`UPDATE board_posts SET featured_days = ${days}, updated_at = NOW() WHERE id = ${id}`
++  // Changing the duration restarts the featuring clock from now;
++  // unfeaturing (0 days) clears it.
++  await sql`UPDATE board_posts
++    SET featured_days = ${days}, updated_at = NOW(),
++      featured_until = CASE WHEN ${days} > 0 THEN NOW() + ${days} * INTERVAL '1 day' ELSE NULL END
++    WHERE id = ${id}`
+   revalidatePath('/admin/board')
+   revalidatePath('/board')
+   revalidatePath('/')
+diff --git a/lib/db.ts b/lib/db.ts
+index 6d1d89e5..9272a2ea 100644
+--- a/lib/db.ts
++++ b/lib/db.ts
+@@ -27,6 +27,9 @@ export type ApplicationRow = {
+   pitch: string
+   flex_lane: string
+   shotcalling: string
++  trial_day: string
++  trial_time: string
++  gender: string
+   status: string
+   rating: number
+   admin_notes: string
+@@ -69,6 +72,7 @@ export type BoardPostRow = {
+   logo: string
+   banner: string
+   featured_days: number
++  featured_until: string | null
+   status: string
+   discord_sent: boolean
+   created_at: string
+@@ -114,6 +118,9 @@ export function ensureSchema() {
+         pitch TEXT NOT NULL DEFAULT '',
+         flex_lane TEXT NOT NULL DEFAULT '',
+         shotcalling TEXT NOT NULL DEFAULT '',
++        trial_day TEXT NOT NULL DEFAULT '',
++        trial_time TEXT NOT NULL DEFAULT '',
++        gender TEXT NOT NULL DEFAULT '',
+         status TEXT NOT NULL DEFAULT 'new',
+         rating INTEGER NOT NULL DEFAULT 0,
+         admin_notes TEXT NOT NULL DEFAULT '',
+@@ -132,6 +139,9 @@ export function ensureSchema() {
+       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS pitch TEXT NOT NULL DEFAULT ''`
+       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS flex_lane TEXT NOT NULL DEFAULT ''`
+       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS shotcalling TEXT NOT NULL DEFAULT ''`
++      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS trial_day TEXT NOT NULL DEFAULT ''`
++      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS trial_time TEXT NOT NULL DEFAULT ''`
++      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT ''`
+       await sql`UPDATE applications SET track = 'staff' WHERE track = 'player' AND code LIKE 'AW-S-%'`
+       await sql`CREATE TABLE IF NOT EXISTS contact_messages (
+         id SERIAL PRIMARY KEY,
+@@ -166,6 +176,7 @@ export function ensureSchema() {
+         logo TEXT NOT NULL DEFAULT '',
+         banner TEXT NOT NULL DEFAULT '',
+         featured_days INTEGER NOT NULL DEFAULT 0,
++        featured_until TIMESTAMPTZ,
+         status TEXT NOT NULL DEFAULT 'pending',
+         discord_sent BOOLEAN NOT NULL DEFAULT FALSE,
+         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+@@ -178,6 +189,10 @@ export function ensureSchema() {
+       await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS owner_added BOOLEAN NOT NULL DEFAULT FALSE`
+       // Backfill for boards created before post types (promote vs requirement).
+       await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS post_type TEXT NOT NULL DEFAULT 'requirement'`
++      // Backfill for boards created before featured auto-expiry (2026-11-23).
++      // Existing rows keep featured_until NULL, which the featured rule treats
++      // as still featured while featured_days > 0.
++      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ`
+     })().catch((error) => {
+       ready = null
+       throw error
+diff --git a/lib/discord.ts b/lib/discord.ts
+index 8daaceef..da14f93f 100644
+--- a/lib/discord.ts
++++ b/lib/discord.ts
+@@ -1,4 +1,4 @@
+-import { boardDurationLabel, experienceLevels, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics } from './site'
++import { boardDurationLabel, experienceLevels, genderLabel, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics, trialLabel } from './site'
+ import type { ApplicationRow, BoardPostRow, MessageRow } from './db'
+ 
+ type Embed = Record<string, unknown>
+@@ -70,7 +70,9 @@ export async function sendApplicationToDiscord(app: ApplicationRow) {
+   }
+   fields.push({ name: '▸ Discord', value: mono(app.discord), inline: true })
+   fields.push({ name: '▸ Age', value: isMinor ? `${app.age}  ·  **minor**` : String(app.age), inline: true })
++  if (!isStaff && app.gender) fields.push({ name: '▸ Gender', value: genderLabel(app.gender), inline: true })
+   fields.push({ name: '▸ Availability', value: cut(`${app.availability}  ·  ${app.timezone}`, 300) })
++  if (!isStaff) fields.push({ name: '▸ Trial time', value: trialLabel(app.trial_day ?? '', app.trial_time ?? '') })
+   if (isStaff && app.pitch) fields.push({ name: '▸ First idea', value: quote(app.pitch, 500) })
+   if (app.links) fields.push({ name: '▸ Links', value: cut(app.links, 400) })
+   fields.push({ name: '▸ Review in dashboard', value: `[Open application #${app.id}](${base}/admin/applications/${app.id})` })
+diff --git a/lib/site.ts b/lib/site.ts
+index 85b39c47..a3af662e 100644
+--- a/lib/site.ts
++++ b/lib/site.ts
+@@ -58,6 +58,41 @@ export const boardDurationLabel = (days: number, free = false) =>
+     ? `${days} day${days === 1 ? '' : 's'} featured${free ? ' · Free' : ` · ₹${boardFeaturedPrices[days]}`}`
+     : 'Standard listing'
+ 
++// Featured rule (2026-11-23): a post counts as featured only while it has
++// featured days left AND its featured_until is unset (grandfathered) or in
++// the future. The API mirrors this rule in SQL — keep the two in sync.
++export const isPostFeatured = (featuredDays: number, featuredUntil: string | null | undefined) =>
++  featuredDays > 0 && (!featuredUntil || new Date(featuredUntil).getTime() > Date.now())
++
++// Trial time picker (recruitment form, 2026-11-23). Slots are IST.
++export const trialTimeSlots = [
++  { value: '10:00 AM – 12:00 PM', label: '10:00 AM – 12:00 PM' },
++  { value: '12:00 PM – 2:00 PM', label: '12:00 PM – 2:00 PM' },
++  { value: '2:00 PM – 4:00 PM', label: '2:00 PM – 4:00 PM' },
++  { value: '4:00 PM – 6:00 PM', label: '4:00 PM – 6:00 PM' },
++  { value: '6:00 PM – 8:00 PM', label: '6:00 PM – 8:00 PM' },
++  { value: '8:00 PM – 10:00 PM', label: '8:00 PM – 10:00 PM' },
++] as const
++
++export const genderLabel = (value: string) => (value === 'male' ? 'Male' : value === 'female' ? 'Female' : '')
++
++// '2026-11-25' -> '25 Nov 2026'. Parses the parts directly so the date
++// never shifts with the viewer's timezone.
++export const formatDayShort = (day: string) => {
++  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day.trim())
++  if (!match) return day
++  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
++  return `${Number(match[3])} ${months[Number(match[2]) - 1]} ${match[1]}`
++}
++
++export const trialLabel = (day: string, time: string) => {
++  const dayPart = day ? formatDayShort(day) : ''
++  if (dayPart && time) return `${dayPart} · ${time}`
++  if (dayPart) return dayPart
++  if (time) return time
++  return 'Not given'
++}
++
+ export type BoardContactMethod = 'instagram' | 'discord'
+ 
+ // How people reach a poster: Instagram or Discord. Added 2026-11-22 at the
+diff --git a/lib/validation.ts b/lib/validation.ts
+index ab697582..49d02485 100644
+--- a/lib/validation.ts
++++ b/lib/validation.ts
+@@ -1,4 +1,4 @@
+-import { boardCategories, experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics } from './site'
++import { boardCategories, experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics, trialTimeSlots } from './site'
+ 
+ export type Track = 'player' | 'staff'
+ 
+@@ -29,6 +29,9 @@ export type ApplicationInput = {
+   // Player track
+   flexLane: string
+   shotcalling: string
++  trialDay: string
++  trialTime: string
++  gender: string
+   consent: boolean
+   website: string
+ }
+@@ -60,13 +63,16 @@ export const emptyApplication: ApplicationInput = {
+   pitch: '',
+   flexLane: '',
+   shotcalling: '',
++  trialDay: '',
++  trialTime: '',
++  gender: '',
+   consent: false,
+   website: '',
+ }
+ 
+ export const playerSteps: { label: string; fields: (keyof ApplicationInput)[] }[] = [
+-  { label: 'Role', fields: ['role', 'name', 'email', 'discord', 'age'] },
+-  { label: 'Game profile', fields: ['ign', 'gameId', 'serverId', 'rank', 'mainHeroes', 'flexLane', 'shotcalling', 'experience', 'availability', 'timezone'] },
++  { label: 'Role', fields: ['role', 'name', 'email', 'discord', 'age', 'gender'] },
++  { label: 'Game profile', fields: ['ign', 'gameId', 'serverId', 'rank', 'mainHeroes', 'flexLane', 'shotcalling', 'experience', 'availability', 'timezone', 'trialDay', 'trialTime'] },
+   { label: 'Your story', fields: ['message', 'links'] },
+   { label: 'Review', fields: ['consent'] },
+ ]
+@@ -124,6 +130,19 @@ export function validateApplication(input: ApplicationInput): ApplicationErrors
+     if (!experienceLevels.some((level) => level.value === input.experience)) errors.experience = 'Select your experience level.'
+     if (length(input.availability) < 3 || length(input.availability) > 200) errors.availability = 'Tell us when you can play.'
+     if (length(input.timezone) < 2 || length(input.timezone) > 60) errors.timezone = 'Enter your timezone or country.'
++    if (input.gender !== 'male' && input.gender !== 'female') errors.gender = 'Choose an option.'
++    // Trial day and time are optional — only validate them when given.
++    if (input.trialDay) {
++      const today = new Date()
++      today.setHours(0, 0, 0, 0)
++      const picked = new Date(`${input.trialDay}T00:00:00`)
++      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.trialDay) || Number.isNaN(picked.getTime()) || picked < today) {
++        errors.trialDay = 'Pick today or a future date.'
++      }
++    }
++    if (input.trialTime && !trialTimeSlots.some((slot) => slot.value === input.trialTime)) {
++      errors.trialTime = 'Choose a trial time slot.'
++    }
+     if (length(input.links) > 600) errors.links = 'Keep links under 600 characters.'
+     if (length(input.message) < 30) errors.message = 'Give us at least a few sentences (30+ characters).'
+     if (length(input.message) > 1200) errors.message = 'Please keep this under 1200 characters.'
+@@ -143,6 +162,7 @@ export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unk
+     return /^\d+(\s*-\s*\d+)?$/.test(cleaned) ? `${cleaned.replace(/\s/g, '')} hours` : cleaned
+   }
+   const track = raw.track === 'staff' ? 'staff' : 'player'
++  const trialDay = text(raw.trialDay, 10)
+   return {
+     track,
+     role: text(raw.role, 20),
+@@ -168,6 +188,9 @@ export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unk
+     pitch: text(raw.pitch, 1000),
+     flexLane: text(raw.flexLane, 20),
+     shotcalling: text(raw.shotcalling, 10),
++    trialDay: /^\d{4}-\d{2}-\d{2}$/.test(trialDay) ? trialDay : '',
++    trialTime: text(raw.trialTime, 40),
++    gender: raw.gender === 'male' || raw.gender === 'female' ? raw.gender : '',
+     consent: raw.consent === true,
+     website: text(raw.website, 100),
+   }
