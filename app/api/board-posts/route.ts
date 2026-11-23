@@ -25,13 +25,16 @@ const publicPost = (row: BoardPostRow) => ({
 })
 
 export async function GET(request: Request) {
-  const category = new URL(request.url).searchParams.get('category') ?? ''
+  const params = new URL(request.url).searchParams
+    const category = params.get('category') ?? ''
+  const featuredOnly = params.get('featured') === '1'
   try {
     await ensureSchema()
     const sql = getSql()
     const rows = (await sql`SELECT * FROM board_posts
       WHERE status = 'approved'
         AND (${category} = '' OR category = ${category})
+        AND (${featuredOnly ? 1 : 0} = 0 OR featured_days > 0)
       ORDER BY featured_days DESC, created_at DESC
       LIMIT 100`) as BoardPostRow[]
     return NextResponse.json({ ok: true, posts: rows.map(publicPost) })
