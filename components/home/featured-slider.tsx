@@ -14,7 +14,7 @@ export function FeaturedSlider() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/api/board-posts')
+    fetch('/api/board-posts?featured=1')
       .then((response) => response.json())
       .then((data) => {
         if (!cancelled) {
