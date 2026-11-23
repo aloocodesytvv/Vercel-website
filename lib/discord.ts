@@ -1,4 +1,4 @@
-import { boardDurationLabel, experienceLevels, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics } from './site'
+import { boardDurationLabel, experienceLevels, genderLabel, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics, trialLabel } from './site'
 import type { ApplicationRow, BoardPostRow, MessageRow } from './db'
 
 type Embed = Record<string, unknown>
@@ -70,7 +70,9 @@ export async function sendApplicationToDiscord(app: ApplicationRow) {
   }
   fields.push({ name: '▸ Discord', value: mono(app.discord), inline: true })
   fields.push({ name: '▸ Age', value: isMinor ? `${app.age}  ·  **minor**` : String(app.age), inline: true })
+  if (!isStaff && app.gender) fields.push({ name: '▸ Gender', value: genderLabel(app.gender), inline: true })
   fields.push({ name: '▸ Availability', value: cut(`${app.availability}  ·  ${app.timezone}`, 300) })
+  if (!isStaff) fields.push({ name: '▸ Trial time', value: trialLabel(app.trial_day ?? '', app.trial_time ?? '') })
   if (isStaff && app.pitch) fields.push({ name: '▸ First idea', value: quote(app.pitch, 500) })
   if (app.links) fields.push({ name: '▸ Links', value: cut(app.links, 400) })
   fields.push({ name: '▸ Review in dashboard', value: `[Open application #${app.id}](${base}/admin/applications/${app.id})` })

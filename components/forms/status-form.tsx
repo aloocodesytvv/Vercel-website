@@ -13,6 +13,8 @@ type Result = {
   label: string
   message: string
   note: string | null
+  trial: string | null
+  gender: string | null
   submitted: string
   updated: string
 }
@@ -99,6 +101,13 @@ export function StatusForm() {
             </div>
             <p className="display text-4xl text-bone md:text-5xl">{result.label}</p>
             <p className="text-sm leading-relaxed text-mute md:text-base">{result.message}</p>
+
+            {(result.gender || result.trial) && (
+              <div className="flex flex-col gap-1 border-t border-white/10 pt-4 text-sm text-bone/85">
+                {result.gender && <p>Gender: {result.gender}</p>}
+                {result.trial && <p>Trial time: {result.trial}</p>}
+              </div>
+            )}
 
             {result.note && (
               <p className="border-l-2 border-ember bg-ember/10 p-4 text-sm text-bone/85">

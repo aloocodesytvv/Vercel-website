@@ -26,6 +26,7 @@ const publicPost = (row: BoardPostRow) => ({
   logo: row.logo,
   banner: row.banner,
   featuredDays: row.featured_days,
+  featuredUntil: row.featured_until,
   createdAt: row.created_at,
 })
 
@@ -39,8 +40,9 @@ export async function GET(request: Request) {
     const rows = (await sql`SELECT * FROM board_posts
       WHERE status = 'approved'
         AND (${category} = '' OR category = ${category})
-        AND (${featuredOnly ? 1 : 0} = 0 OR featured_days > 0)
-      ORDER BY featured_days DESC, created_at DESC
+        AND (${featuredOnly ? 1 : 0} = 0 OR (featured_days > 0 AND (featured_until IS NULL OR featured_until > NOW())))
+      ORDER BY (CASE WHEN featured_days > 0 AND (featured_until IS NULL OR featured_until > NOW()) THEN 1 ELSE 0 END) DESC,
+        featured_days DESC, created_at DESC
       LIMIT 100`) as BoardPostRow[]
     return NextResponse.json({ ok: true, posts: rows.map(publicPost) })
   } catch (error) {

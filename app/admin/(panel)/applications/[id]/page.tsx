@@ -7,7 +7,7 @@ import { DiscordDot, fullDate } from '@/components/admin/helpers'
 import { StatusBadge } from '@/components/site/status-badge'
 import { deleteApplicationAction, updateApplicationAction } from '@/lib/actions'
 import { ensureSchema, getSql, type ApplicationRow } from '@/lib/db'
-import { experienceLevels, getRole, statuses } from '@/lib/site'
+import { experienceLevels, genderLabel, getRole, statuses, trialLabel } from '@/lib/site'
 import { btn } from '@/lib/ui'
 
 export const metadata: Metadata = { title: 'Application' }
@@ -73,6 +73,7 @@ export default async function ApplicationDetailPage({
         { label: 'Email', value: app.email },
         { label: 'Discord', value: app.discord },
         { label: 'Age', value: String(app.age) },
+        { label: 'Gender', value: genderLabel(app.gender) || '-' },
         { label: 'Timezone', value: app.timezone },
         { label: 'In-game name', value: app.ign || '-' },
         { label: 'Rank', value: app.rank || '-' },
@@ -82,6 +83,7 @@ export default async function ApplicationDetailPage({
         { label: 'Flex lane', value: app.flex_lane || '-' },
         { label: 'Shot-calling', value: app.shotcalling || '-' },
         { label: 'Availability', value: app.availability },
+        { label: 'Trial time', value: trialLabel(app.trial_day ?? '', app.trial_time ?? '') },
       ]
 
   return (

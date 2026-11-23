@@ -4,7 +4,7 @@ import { Download, Search } from 'lucide-react'
 import { DiscordDot, Rating, timeAgo } from '@/components/admin/helpers'
 import { StatusBadge } from '@/components/site/status-badge'
 import { ensureSchema, getSql, type ApplicationRow } from '@/lib/db'
-import { getRole, roles, statuses } from '@/lib/site'
+import { genderLabel, getRole, roles, statuses, trialLabel } from '@/lib/site'
 import { btn } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 
@@ -115,7 +115,12 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                       {app.track === 'staff' ? 'Staff' : 'Player'}
                     </span>
                   </span>
-                  <span className="text-xs text-mute">{app.track === 'staff' ? app.experience || 'No experience' : app.rank || 'No rank'}</span>
+                  <span className="text-xs text-mute">
+                    {app.track === 'staff'
+                      ? app.experience || 'No experience'
+                      : `${app.rank || 'No rank'}${app.gender ? ` · ${genderLabel(app.gender)}` : ''}`}
+                  </span>
+                  {app.track === 'player' && <span className="text-xs text-mute">Trial: {trialLabel(app.trial_day ?? '', app.trial_time ?? '')}</span>}
                 </div>
                 <div>
                   <StatusBadge status={app.status} />

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
+import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod, isPostFeatured } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 export type BoardPost = {
@@ -23,6 +23,7 @@ export type BoardPost = {
   logo: string
   banner: string
   featuredDays: number
+  featuredUntil: string | null
   createdAt: string
 }
 
@@ -41,7 +42,7 @@ function Avatar({ post }: { post: BoardPost }) {
 }
 
 export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
-  const featured = post.featuredDays > 0
+  const featured = isPostFeatured(post.featuredDays, post.featuredUntil)
   const isPromote = post.postType === 'promote'
   const category = getBoardCategory(post.category)
   const chips = [
