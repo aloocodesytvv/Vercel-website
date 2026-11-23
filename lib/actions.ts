@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { adminConfigured, assertAdmin, checkPassword, createSession, destroySession } from './auth'
 import { ensureSchema, getSql } from './db'
-import { statuses } from './site'
+import { boardBannerFor, statuses } from './site'
+import { cleanBoardPost, validateBoardPost, type BoardPostErrors, type BoardPostInput } from './validation'
 
 export type LoginState = { error?: string } | undefined
 
@@ -77,6 +78,57 @@ export async function setBoardPostStatusAction(formData: FormData) {
   if (!Number.isInteger(id) || !['approved', 'declined', 'pending'].includes(status)) return
   const sql = getSql()
   await sql`UPDATE board_posts SET status = ${status}, updated_at = NOW() WHERE id = ${id}`
+  revalidatePath('/admin/board')
+  revalidatePath('/board')
+  revalidatePath('/')
+}
+
+// Owner adds a featured post himself: it goes live immediately, in gold,
+// and it is free — no payment. Same fields as the public board form.
+export async function addBoardPostAction(input: BoardPostInput): Promise<{ ok: boolean; errors?: BoardPostErrors }> {
+  await assertAdmin()
+  const cleaned = cleanBoardPost(input)
+  const errors = validateBoardPost(cleaned)
+  if (cleaned.featuredDays < 1 || cleaned.featuredDays > 7) {
+    errors.featuredDays = 'Pick 1 to 7 days of featuring.'
+  }
+  if (Object.keys(errors).length) return { ok: false, errors }
+  await ensureSchema()
+  const sql = getSql()
+  const banner = boardBannerFor(`${cleaned.orgName}:${cleaned.title}`)
+  await sql`INSERT INTO board_posts
+    (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how,
+     instagram, contact_type, contact_value, logo, banner, featured_days, status, owner_added)
+    VALUES (${cleaned.category}, ${cleaned.postType}, ${cleaned.orgName}, ${cleaned.title}, ${cleaned.detail}, ${cleaned.roleNeeded},
+      ${cleaned.rank}, ${cleaned.speciality}, ${cleaned.experience}, ${cleaned.languages}, ${cleaned.sells},
+      ${cleaned.buyHow}, ${cleaned.instagram}, ${cleaned.contactType}, ${cleaned.contact}, ${cleaned.logo},
+      ${banner}, ${cleaned.featuredDays}, 'approved', TRUE)`
+  revalidatePath('/admin/board')
+  revalidatePath('/board')
+  revalidatePath('/')
+  redirect('/admin/board?added=1')
+}
+
+// Change the featuring of a live post: 1–7 days to lower or extend it,
+// 0 to unfeature it (it stays live as a standard blue listing).
+export async function setBoardPostFeaturedAction(formData: FormData) {
+  await assertAdmin()
+  await ensureSchema()
+  const id = Number(formData.get('id'))
+  const days = Number(formData.get('featuredDays'))
+  if (!Number.isInteger(id) || ![0, 1, 2, 3, 4, 5, 6, 7].includes(days)) return
+  const sql = getSql()
+  await sql`UPDATE board_posts SET featured_days = ${days}, updated_at = NOW() WHERE id = ${id}`
+  revalidatePath('/admin/board')
+  revalidatePath('/board')
+  revalidatePath('/')
+}
+
+export async function deleteBoardPostAction(formData: FormData) {
+  await assertAdmin()
+  const id = Number(formData.get('id'))
+  if (!Number.isInteger(id)) return
+  await getSql()`DELETE FROM board_posts WHERE id = ${id}`
   revalidatePath('/admin/board')
   revalidatePath('/board')
   revalidatePath('/')

@@ -71,7 +71,7 @@ export function BoardPage() {
         <p className="border border-dashed border-white/15 p-8 text-sm text-mute">Loading the board…</p>
       ) : visible.length === 0 ? (
         <p className="border border-dashed border-white/15 p-8 text-sm text-mute">
-          {filter ? 'Nothing in this category yet.' : 'No posts on the board yet. Be the first to post a requirement below.'}
+          {filter ? 'Nothing in this category yet.' : 'No posts on the board yet. Be the first to post below.'}
         </p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,11 +83,11 @@ export function BoardPage() {
 
       <section className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">Post a requirement</p>
+          <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">Post on the board</p>
           <h2 className="display text-4xl text-bone md:text-5xl">Put it on the board.</h2>
           <p className="max-w-2xl text-sm leading-relaxed text-mute">
-            Organisations, coaches, analysts, casters and stores can promote themselves here. Every post is reviewed by the manager
-            before it goes live.
+            Organisations, coaches, analysts, casters, streamers and stores can promote themselves or post a requirement here. Every
+            post is reviewed by the manager before it goes live.
           </p>
         </div>
         <BoardForm />

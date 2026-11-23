@@ -7,6 +7,7 @@ import { cleanBoardPost, validateBoardPost } from '@/lib/validation'
 const publicPost = (row: BoardPostRow) => ({
   id: row.id,
   category: row.category,
+  postType: row.post_type,
   orgName: row.org_name,
   title: row.title,
   detail: row.detail,
@@ -18,6 +19,10 @@ const publicPost = (row: BoardPostRow) => ({
   sells: row.sells,
   buyHow: row.buy_how,
   instagram: row.instagram,
+  // Older rows only have instagram — treat them as Instagram contacts.
+  contactType: row.contact_type || 'instagram',
+  contactValue: row.contact_value || row.instagram,
+  ownerAdded: row.owner_added,
   logo: row.logo,
   banner: row.banner,
   featuredDays: row.featured_days,
@@ -63,9 +68,10 @@ export async function POST(request: Request) {
     const sql = getSql()
     const banner = boardBannerFor(`${input.orgName}:${input.title}`)
     const rows = (await sql`INSERT INTO board_posts
-      (category, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how, instagram, logo, banner, featured_days)
-      VALUES (${input.category}, ${input.orgName}, ${input.title}, ${input.detail}, ${input.roleNeeded}, ${input.rank},
+      (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how, instagram, contact_type, contact_value, logo, banner, featured_days)
+      VALUES (${input.category}, ${input.postType}, ${input.orgName}, ${input.title}, ${input.detail}, ${input.roleNeeded}, ${input.rank},
         ${input.speciality}, ${input.experience}, ${input.languages}, ${input.sells}, ${input.buyHow}, ${input.instagram},
+        ${input.contactType}, ${input.contact},
         ${input.logo}, ${banner}, ${input.featuredDays})
       RETURNING *`) as BoardPostRow[]
 

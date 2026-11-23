@@ -3,7 +3,7 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Check, ImagePlus, LoaderCircle, X } from 'lucide-react'
 import { DropdownField, TextAreaField, TextField } from '@/components/forms/controls'
-import { boardCategories, boardDurations, boardFeaturedPrices, experienceLevels, ranks, roles, type BoardCategory } from '@/lib/site'
+import { boardCategories, boardContactMethods, boardDurations, boardFeaturedPrices, boardPostTypeLabel, boardPostTypes, experienceLevels, ranks, roles, type BoardCategory, type BoardPostType } from '@/lib/site'
 import { btn } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import { emptyBoardPost, validateBoardPost, type BoardPostErrors, type BoardPostInput } from '@/lib/validation'
@@ -24,8 +24,18 @@ const sellsOptions = [
 
 const MAX_LOGO_BYTES = 500_000
 
-export function BoardForm() {
-  const [values, setValues] = useState<BoardPostInput>({ ...emptyBoardPost })
+export function BoardForm({
+  adminSubmit,
+}: {
+  // When set, the form runs in admin mode: the owner adds a featured post
+  // himself (goes live straight away, free) instead of sending it for review.
+  adminSubmit?: (input: BoardPostInput) => Promise<{ ok: boolean; errors?: BoardPostErrors }>
+}) {
+  const adminMode = Boolean(adminSubmit)
+  const [values, setValues] = useState<BoardPostInput>({
+    ...emptyBoardPost,
+    featuredDays: adminMode ? 3 : 0,
+  })
   const [errors, setErrors] = useState<BoardPostErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -34,6 +44,10 @@ export function BoardForm() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const category = values.category as BoardCategory
+  const postType = (values.postType === 'promote' ? 'promote' : 'requirement') as BoardPostType
+  const isPromote = postType === 'promote'
+  const contactMethod = boardContactMethods.find((method) => method.id === values.contactType) ?? boardContactMethods[0]
+  const featuringOptions = adminMode ? boardDurations.filter((days) => days > 0) : boardDurations
 
   const set = <K extends keyof BoardPostInput>(key: K, value: BoardPostInput[K]) => {
     setValues((current) => ({ ...current, [key]: value }))
@@ -65,6 +79,16 @@ export function BoardForm() {
     setSubmitting(true)
     setServerError('')
     try {
+      if (adminSubmit) {
+        // The server action redirects to /admin/board on success.
+        const result = await adminSubmit(values)
+        if (result.errors) {
+          setErrors(result.errors)
+        } else if (!result.ok) {
+          setServerError('Something went wrong. Please try again.')
+        }
+        return
+      }
       const response = await fetch('/api/board-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +129,7 @@ export function BoardForm() {
           }}
           className={btn.ghost}
         >
-          Post another requirement
+          Post another
         </button>
       </div>
     )
@@ -136,7 +160,11 @@ export function BoardForm() {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => set('category', item.id)}
+                onClick={() => {
+                  set('category', item.id)
+                  // Only organisations choose — everyone else promotes.
+                  set('postType', item.id === 'organisation' ? 'requirement' : 'promote')
+                }}
                 aria-pressed={active}
                 className={cn(
                   'border px-4 py-2.5 text-sm font-bold transition-colors',
@@ -155,6 +183,32 @@ export function BoardForm() {
         )}
       </fieldset>
 
+      {category === 'organisation' && (
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-bone">What do you want to do?</legend>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="What do you want to do?">
+            {boardPostTypes.map((item) => {
+              const active = postType === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => set('postType', item.id)}
+                  aria-pressed={active}
+                  className={cn(
+                    'flex flex-col items-start gap-0.5 border px-4 py-2.5 text-left transition-colors',
+                    active ? 'border-ember bg-ember/15 text-bone' : 'border-white/10 bg-transparent text-mute hover:border-white/30 hover:text-bone',
+                  )}
+                >
+                  <span className="text-sm font-bold">{boardPostTypeLabel(category, item.id)}</span>
+                  <span className="text-xs font-normal text-mute">{item.hint}</span>
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      )}
+
       <div className="grid gap-6 sm:grid-cols-2">
         <TextField
           id="orgName"
@@ -164,26 +218,56 @@ export function BoardForm() {
           error={errors.orgName}
           onChange={(event) => set('orgName', event.target.value)}
         />
-        <TextField
-          id="instagram"
-          label="Instagram contact"
-          placeholder="@yourhandle"
-          hint="People reach you here."
-          value={values.instagram}
-          error={errors.instagram}
-          onChange={(event) => set('instagram', event.target.value)}
-        />
+        <div className="flex flex-col gap-3">
+          <span className="text-xs font-bold uppercase tracking-[0.18em] text-bone">How can people reach you?</span>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Contact method">
+            {boardContactMethods.map((method) => {
+              const active = values.contactType === method.id
+              return (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() => set('contactType', method.id)}
+                  aria-pressed={active}
+                  className={cn(
+                    'border px-4 py-2.5 text-sm font-bold transition-colors',
+                    active ? 'border-ember bg-ember/15 text-bone' : 'border-white/10 bg-transparent text-mute hover:border-white/30 hover:text-bone',
+                  )}
+                >
+                  {method.label}
+                </button>
+              )
+            })}
+          </div>
+          <TextField
+            id="contact"
+            label={contactMethod.label}
+            placeholder={contactMethod.placeholder}
+            hint={contactMethod.hint}
+            value={values.contact}
+            error={errors.contact}
+            onChange={(event) => set('contact', event.target.value)}
+          />
+        </div>
       </div>
 
       <TextField
         id="title"
-        label="Requirement title"
+        label={isPromote ? 'Headline' : 'Requirement title'}
         placeholder={
-          category === 'store'
-            ? 'e.g. Cheap diamonds, instant delivery'
-            : category === 'caster'
-              ? 'e.g. English + Hindi caster for tournaments'
-              : 'e.g. Roamer required for second lineup'
+          isPromote
+            ? category === 'organisation'
+              ? 'e.g. Three lineups, trials open, join the family'
+              : category === 'coach'
+                ? 'e.g. I coach drafting and macro play'
+                : category === 'analyst'
+                  ? 'e.g. VOD review and opponent scouting'
+                  : category === 'caster'
+                    ? 'e.g. English + Hindi caster for tournaments'
+                    : category === 'store'
+                      ? 'e.g. Cheap diamonds, instant delivery'
+                      : 'e.g. Daily Mythic rank push streams'
+            : 'e.g. Roamer required for second lineup'
         }
         value={values.title}
         error={errors.title}
@@ -195,13 +279,13 @@ export function BoardForm() {
         label="Short line"
         rows={3}
         maxLength={400}
-        placeholder="One or two lines about what you need or offer."
+        placeholder={isPromote ? 'One or two lines about what you offer.' : 'One or two lines about what you need or offer.'}
         value={values.detail}
         error={errors.detail}
         onChange={(event) => set('detail', event.target.value)}
       />
 
-      {category === 'organisation' && (
+      {category === 'organisation' && !isPromote && (
         <div className="grid gap-6 sm:grid-cols-2">
           <DropdownField
             id="roleNeeded"
@@ -325,7 +409,7 @@ export function BoardForm() {
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-bone">Featuring</legend>
         <div className="flex flex-wrap gap-2" role="group" aria-label="Featuring duration">
-          {boardDurations.map((days) => {
+          {featuringOptions.map((days) => {
             const active = values.featuredDays === days
             return (
               <button
@@ -343,7 +427,11 @@ export function BoardForm() {
             )
           })}
         </div>
-        <p className="text-xs text-mute">Featured posts are highlighted in gold and pinned at the top of the board and the landing page.</p>
+        <p className="text-xs text-mute">
+          {adminMode
+            ? 'Free — you add it yourself, no payment. It shows in gold at the top of the board and the landing page.'
+            : 'Featured posts are highlighted in gold and pinned at the top of the board and the landing page.'}
+        </p>
       </fieldset>
 
       {serverError && (
@@ -359,6 +447,8 @@ export function BoardForm() {
               <LoaderCircle className="size-4 animate-spin" />
               Sending
             </>
+          ) : adminMode ? (
+            'Add featured post'
           ) : (
             'Send for review'
           )}

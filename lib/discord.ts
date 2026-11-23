@@ -1,4 +1,4 @@
-import { boardDurationLabel, experienceLevels, getBoardCategory, getRole, siteUrl, staffExperienceLevels, topics } from './site'
+import { boardDurationLabel, experienceLevels, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics } from './site'
 import type { ApplicationRow, BoardPostRow, MessageRow } from './db'
 
 type Embed = Record<string, unknown>
@@ -132,6 +132,9 @@ export async function sendBoardPostToDiscord(row: BoardPostRow) {
     .filter(Boolean)
     .join('\n')
 
+  const contactMethod = getBoardContactMethod(row.contact_type || 'instagram')
+  const contactValue = row.contact_value || row.instagram
+
   const embed: Embed = {
     author: { name: 'ASHEN WINGS  ·  ORG BOARD' },
     title: `New board post for review  ·  ${category}`,
@@ -140,8 +143,9 @@ export async function sendBoardPostToDiscord(row: BoardPostRow) {
     color: GOLD,
     fields: [
       { name: '▸ Category', value: `**${category}**`, inline: true },
+      { name: '▸ Type', value: row.post_type === 'promote' ? '**Promote**' : '**Requirement**', inline: true },
       { name: '▸ Featuring', value: boardDurationLabel(row.featured_days), inline: true },
-      { name: '▸ Instagram', value: row.instagram ? mono(row.instagram) : 'n/a', inline: true },
+      { name: '▸ Contact', value: contactValue ? `${contactMethod.label}: ${mono(contactValue)}` : 'n/a', inline: true },
       ...(specifics ? [{ name: '▸ Details', value: cut(specifics, 400) }] : []),
       { name: '▸ Review in dashboard', value: `[Open the board queue](${base}/admin/board)` },
     ],

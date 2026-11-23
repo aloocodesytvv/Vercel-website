@@ -14,7 +14,7 @@ export const site = {
   ],
 } as const
 
-export type BoardCategory = 'organisation' | 'coach' | 'analyst' | 'caster' | 'store'
+export type BoardCategory = 'organisation' | 'coach' | 'analyst' | 'caster' | 'store' | 'streamer'
 
 export const boardCategories: { id: BoardCategory; label: string; tag: string }[] = [
   { id: 'organisation', label: 'Organisation', tag: 'Org' },
@@ -22,7 +22,20 @@ export const boardCategories: { id: BoardCategory; label: string; tag: string }[
   { id: 'analyst', label: 'Analyst', tag: 'Analyst' },
   { id: 'caster', label: 'Caster', tag: 'Caster' },
   { id: 'store', label: 'Store', tag: 'Store' },
+  { id: 'streamer', label: 'Streamer', tag: 'Streamer' },
 ]
+
+// A board post is either self-promotion or a request. Only organisations get
+// the choice — every other category is promote-only.
+export type BoardPostType = 'promote' | 'requirement'
+
+export const boardPostTypes: { id: BoardPostType; label: string; hint: string }[] = [
+  { id: 'promote', label: 'Promote', hint: 'Show off what you do or sell' },
+  { id: 'requirement', label: 'Post a requirement', hint: 'Ask for something you need' },
+]
+
+export const boardPostTypeLabel = (category: BoardCategory, type: BoardPostType) =>
+  type === 'promote' ? (category === 'organisation' ? 'Promote my org' : 'Promote myself') : 'Post a requirement'
 
 export const getBoardCategory = (id: string) => boardCategories.find((item) => item.id === id)
 
@@ -40,8 +53,35 @@ export const boardFeaturedPrices: Record<number, number> = {
   7: 89,
 }
 
-export const boardDurationLabel = (days: number) =>
-  days > 0 ? `${days} day${days === 1 ? '' : 's'} featured · ₹${boardFeaturedPrices[days]}` : 'Standard listing'
+export const boardDurationLabel = (days: number, free = false) =>
+  days > 0
+    ? `${days} day${days === 1 ? '' : 's'} featured${free ? ' · Free' : ` · ₹${boardFeaturedPrices[days]}`}`
+    : 'Standard listing'
+
+export type BoardContactMethod = 'instagram' | 'discord'
+
+// How people reach a poster: Instagram or Discord. Added 2026-11-22 at the
+// user's request — the board form used to ask for Instagram only. WhatsApp
+// was offered briefly and removed 2026-11-23 at the user's request.
+export const boardContactMethods: { id: BoardContactMethod; label: string; placeholder: string; hint: string }[] = [
+  { id: 'instagram', label: 'Instagram', placeholder: '@yourhandle', hint: 'People reach you here.' },
+  { id: 'discord', label: 'Discord', placeholder: 'e.g. yourname', hint: 'Your Discord username.' },
+]
+
+export const getBoardContactMethod = (id: string) =>
+  boardContactMethods.find((item) => item.id === id) ?? boardContactMethods[0]
+
+// Public link for a contact value, if one exists. Discord has no public
+// profile URL, so it returns undefined and the card just shows the username.
+export const boardContactHref = (method: string, value: string): string | undefined => {
+  const clean = value.trim()
+  if (!clean) return undefined
+  if (method === 'instagram') {
+    const handle = clean.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '')
+    return handle ? `https://instagram.com/${handle}` : undefined
+  }
+  return undefined
+}
 
 // Card banners: the user's friend's artwork, used with permission.
 export const boardBanners = ['/art/board-banner-slash.jpg', '/art/board-banner-oni.jpg', '/art/board-banner-neon.jpg'] as const
