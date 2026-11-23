@@ -1,0 +1,909 @@
+diff --git a/app/admin/(panel)/board/new/page.tsx b/app/admin/(panel)/board/new/page.tsx
+new file mode 100644
+index 00000000..2b47128d
+--- /dev/null
++++ b/app/admin/(panel)/board/new/page.tsx
+@@ -0,0 +1,28 @@
++import type { Metadata } from 'next'
++import Link from 'next/link'
++import { BoardForm } from '@/components/board/board-form'
++import { addBoardPostAction } from '@/lib/actions'
++
++export const metadata: Metadata = { title: 'Add featured post' }
++
++export default function AdminBoardNewPage() {
++  return (
++    <div className="flex flex-col gap-8">
++      <div className="flex flex-col gap-2">
++        <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">Board · Add it yourself</p>
++        <h1 className="display text-5xl text-bone md:text-7xl">Add a featured post</h1>
++        <p className="max-w-2xl text-sm leading-relaxed text-mute">
++          Post a gold featured ad for another organisation yourself — it goes live on the board and the landing page straight
++          away, for free. No payment, no review queue. Pick 1 to 7 days of featuring; you can lower it, extend it or remove it
++          later from the board list.
++        </p>
++        <p>
++          <Link href="/admin/board" className="text-xs font-bold uppercase tracking-[0.2em] text-ember hover:text-bone">
++            ← Back to board posts
++          </Link>
++        </p>
++      </div>
++      <BoardForm adminSubmit={addBoardPostAction} />
++    </div>
++  )
++}
+diff --git a/app/admin/(panel)/board/page.tsx b/app/admin/(panel)/board/page.tsx
+index d35f1df9..11fafed8 100644
+--- a/app/admin/(panel)/board/page.tsx
++++ b/app/admin/(panel)/board/page.tsx
+@@ -1,8 +1,10 @@
+ import type { Metadata } from 'next'
+ import Image from 'next/image'
++import Link from 'next/link'
++import { ConfirmButton } from '@/components/admin/confirm-button'
+ import { timeAgo } from '@/components/admin/helpers'
+-import { boardDurationLabel, getBoardCategory } from '@/lib/site'
+-import { setBoardPostStatusAction } from '@/lib/actions'
++import { boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
++import { deleteBoardPostAction, setBoardPostFeaturedAction, setBoardPostStatusAction } from '@/lib/actions'
+ import { ensureSchema, getSql, type BoardPostRow } from '@/lib/db'
+ import { btn } from '@/lib/ui'
+ import { cn } from '@/lib/utils'
+@@ -15,29 +17,43 @@ const statusTone: Record<string, string> = {
+   declined: 'bg-red-500/15 text-red-300 ring-red-400/40',
+ }
+ 
+-export default async function AdminBoardPage() {
++export default async function AdminBoardPage({ searchParams }: { searchParams: Promise<{ added?: string }> }) {
++  const { added } = await searchParams
+   await ensureSchema()
+   const sql = getSql()
+   const rows = (await sql`SELECT * FROM board_posts
+     ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, created_at DESC
+     LIMIT 200`) as BoardPostRow[]
+   const pending = rows.filter((row) => row.status === 'pending').length
++  const live = rows.filter((row) => row.status === 'approved').length
++  const featured = rows.filter((row) => row.status === 'approved' && row.featured_days > 0).length
++  const declined = rows.filter((row) => row.status === 'declined').length
+ 
+   return (
+     <div className="flex flex-col gap-8">
+       <div className="flex flex-wrap items-end justify-between gap-4">
+         <div className="flex flex-col gap-2">
+           <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">
+-            {pending} awaiting review · {rows.length} total
++            {pending} awaiting review · {featured} featured · {live} live · {declined} declined · {rows.length} total
+           </p>
+           <h1 className="display text-5xl text-bone md:text-7xl">Board posts</h1>
+           <p className="max-w-2xl text-sm leading-relaxed text-mute">
+             Nothing goes live on the board or the landing slider until you approve it here. Approved posts show immediately;
+-            declined posts stay hidden.
++            declined posts stay hidden. You can also add a featured post yourself — free, live straight away — or change how
++            long a live post stays featured.
+           </p>
+         </div>
++        <Link href="/admin/board/new" className={btn.primary}>
++          + Add featured post
++        </Link>
+       </div>
+ 
++      {added && (
++        <p role="status" className="border-l-2 border-gold bg-gold/10 p-4 text-sm text-gold">
++          Featured post added — it is live on the board and the landing page now, in gold.
++        </p>
++      )}
++
+       {rows.length === 0 ? (
+         <p className="border border-dashed border-white/15 p-8 text-sm text-mute">
+           No board posts yet. When someone submits the board form, it appears here and in your Discord channel.
+@@ -46,6 +62,8 @@ export default async function AdminBoardPage() {
+         <ul className="flex flex-col gap-4">
+           {rows.map((post) => {
+             const category = getBoardCategory(post.category)
++            const contactMethod = getBoardContactMethod(post.contact_type || 'instagram')
++            const contactValue = post.contact_value || post.instagram
+             const specifics = [
+               post.role_needed ? `Role: ${post.role_needed}` : '',
+               post.rank ? `Rank: ${post.rank}` : '',
+@@ -75,9 +93,17 @@ export default async function AdminBoardPage() {
+                     <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-bone/80">
+                       {category?.label ?? post.category}
+                     </span>
++                    <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-bone/80">
++                      {post.post_type === 'promote' ? 'Promote' : 'Requirement'}
++                    </span>
+                     <span className="bg-gold/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
+-                      {boardDurationLabel(post.featured_days)}
++                      {boardDurationLabel(post.featured_days, post.owner_added)}
+                     </span>
++                    {post.owner_added && (
++                      <span className="bg-ember/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-ember">
++                        Added by you
++                      </span>
++                    )}
+                     <span className="text-xs text-mute">{timeAgo(post.created_at)}</span>
+                   </div>
+                   <div>
+@@ -86,10 +112,34 @@ export default async function AdminBoardPage() {
+                     </p>
+                     <p className="mt-1 text-sm leading-relaxed text-mute">{post.detail}</p>
+                     {specifics && <p className="mt-1 text-xs text-mute">{specifics}</p>}
+-                    <p className="mt-1 text-xs text-mute">Instagram: {post.instagram}</p>
++                    <p className="mt-1 text-xs text-mute">
++                      {contactMethod.label}: {contactValue || '—'}
++                    </p>
+                   </div>
++                  <form action={setBoardPostFeaturedAction} className="flex flex-wrap items-center gap-2">
++                    <input type="hidden" name="id" value={post.id} />
++                    <label htmlFor={`featured-${post.id}`} className="text-xs font-bold uppercase tracking-[0.15em] text-mute">
++                      Featuring
++                    </label>
++                    <select
++                      id={`featured-${post.id}`}
++                      name="featuredDays"
++                      defaultValue={post.featured_days}
++                      className="border border-white/15 bg-panel px-3 py-2 text-xs font-bold text-bone"
++                    >
++                      <option value={0}>Not featured</option>
++                      {[1, 2, 3, 4, 5, 6, 7].map((days) => (
++                        <option key={days} value={days}>
++                          {days} day{days === 1 ? '' : 's'}
++                        </option>
++                      ))}
++                    </select>
++                    <button type="submit" className={cn(btn.ghost, 'px-4 py-2 text-xs')}>
++                      Save
++                    </button>
++                  </form>
+                 </div>
+-                <div className="flex shrink-0 flex-row gap-2 md:flex-col">
++                <div className="flex shrink-0 flex-row flex-wrap gap-2 md:flex-col">
+                   {post.status !== 'approved' && (
+                     <form action={setBoardPostStatusAction}>
+                       <input type="hidden" name="id" value={post.id} />
+@@ -117,6 +167,15 @@ export default async function AdminBoardPage() {
+                       </button>
+                     </form>
+                   )}
++                  <form action={deleteBoardPostAction}>
++                    <input type="hidden" name="id" value={post.id} />
++                    <ConfirmButton
++                      message="Delete this board post permanently? This cannot be undone."
++                      className={cn(btn.ghost, 'px-4 py-2.5 text-xs text-red-300 hover:text-red-200')}
++                    >
++                      Delete
++                    </ConfirmButton>
++                  </form>
+                 </div>
+               </li>
+             )
+diff --git a/app/api/board-posts/route.ts b/app/api/board-posts/route.ts
+index edd96fb2..b1041ce3 100644
+--- a/app/api/board-posts/route.ts
++++ b/app/api/board-posts/route.ts
+@@ -7,6 +7,7 @@ import { cleanBoardPost, validateBoardPost } from '@/lib/validation'
+ const publicPost = (row: BoardPostRow) => ({
+   id: row.id,
+   category: row.category,
++  postType: row.post_type,
+   orgName: row.org_name,
+   title: row.title,
+   detail: row.detail,
+@@ -18,6 +19,10 @@ const publicPost = (row: BoardPostRow) => ({
+   sells: row.sells,
+   buyHow: row.buy_how,
+   instagram: row.instagram,
++  // Older rows only have instagram — treat them as Instagram contacts.
++  contactType: row.contact_type || 'instagram',
++  contactValue: row.contact_value || row.instagram,
++  ownerAdded: row.owner_added,
+   logo: row.logo,
+   banner: row.banner,
+   featuredDays: row.featured_days,
+@@ -63,9 +68,10 @@ export async function POST(request: Request) {
+     const sql = getSql()
+     const banner = boardBannerFor(`${input.orgName}:${input.title}`)
+     const rows = (await sql`INSERT INTO board_posts
+-      (category, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how, instagram, logo, banner, featured_days)
+-      VALUES (${input.category}, ${input.orgName}, ${input.title}, ${input.detail}, ${input.roleNeeded}, ${input.rank},
++      (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how, instagram, contact_type, contact_value, logo, banner, featured_days)
++      VALUES (${input.category}, ${input.postType}, ${input.orgName}, ${input.title}, ${input.detail}, ${input.roleNeeded}, ${input.rank},
+         ${input.speciality}, ${input.experience}, ${input.languages}, ${input.sells}, ${input.buyHow}, ${input.instagram},
++        ${input.contactType}, ${input.contact},
+         ${input.logo}, ${banner}, ${input.featuredDays})
+       RETURNING *`) as BoardPostRow[]
+ 
+diff --git a/components/board/board-card.tsx b/components/board/board-card.tsx
+index e8ae16fe..0cef333c 100644
+--- a/components/board/board-card.tsx
++++ b/components/board/board-card.tsx
+@@ -1,10 +1,11 @@
+ import Image from 'next/image'
+-import { boardDurationLabel, getBoardCategory } from '@/lib/site'
++import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
+ import { cn } from '@/lib/utils'
+ 
+ export type BoardPost = {
+   id: number
+   category: string
++  postType: string
+   orgName: string
+   title: string
+   detail: string
+@@ -16,6 +17,9 @@ export type BoardPost = {
+   sells: string
+   buyHow: string
+   instagram: string
++  contactType: string
++  contactValue: string
++  ownerAdded: boolean
+   logo: string
+   banner: string
+   featuredDays: number
+@@ -38,19 +42,20 @@ function Avatar({ post }: { post: BoardPost }) {
+ 
+ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
+   const featured = post.featuredDays > 0
++  const isPromote = post.postType === 'promote'
+   const category = getBoardCategory(post.category)
+   const chips = [
+-    post.roleNeeded ? `Needs: ${post.roleNeeded}` : '',
+-    post.rank ? `Rank: ${post.rank}` : '',
++    !isPromote && post.roleNeeded ? `Needs: ${post.roleNeeded}` : '',
++    !isPromote && post.rank ? `Rank: ${post.rank}` : '',
+     post.speciality ? post.speciality : '',
+     post.experience ? `Exp: ${post.experience}` : '',
+     post.languages ? post.languages : '',
+     post.sells ? `Sells: ${post.sells}` : '',
+     post.buyHow ? post.buyHow : '',
+   ].filter(Boolean)
+-  const instagramHref = post.instagram
+-    ? `https://instagram.com/${post.instagram.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '')}`
+-    : undefined
++  const contactMethod = getBoardContactMethod(post.contactType || 'instagram')
++  const contactValue = post.contactValue || post.instagram
++  const contactHref = boardContactHref(post.contactType || 'instagram', contactValue)
+ 
+   return (
+     <article
+@@ -68,7 +73,7 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
+               ★ Featured
+             </span>
+             <span className="absolute right-3 top-3 bg-ink/80 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
+-              {boardDurationLabel(post.featuredDays)}
++              {boardDurationLabel(post.featuredDays, post.ownerAdded)}
+             </span>
+           </>
+         ) : (
+@@ -83,13 +88,18 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
+       <div className="flex flex-1 flex-col gap-2 p-4 pt-3">
+         <div className="flex items-center justify-between gap-2">
+           <span className="truncate text-sm font-bold text-bone">{post.orgName}</span>
+-          <span
+-            className={cn(
+-              'shrink-0 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em]',
+-              featured ? 'bg-gold/15 text-gold' : 'bg-sky-500/15 text-sky-300',
+-            )}
+-          >
+-            {category?.tag ?? post.category}
++          <span className="flex shrink-0 items-center gap-1.5">
++            <span className="bg-white/5 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-bone/70">
++              {isPromote ? 'Promote' : 'Requirement'}
++            </span>
++            <span
++              className={cn(
++                'px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em]',
++                featured ? 'bg-gold/15 text-gold' : 'bg-sky-500/15 text-sky-300',
++              )}
++            >
++              {category?.tag ?? post.category}
++            </span>
+           </span>
+         </div>
+         <h3 className="display text-2xl leading-none text-bone">{post.title}</h3>
+@@ -104,10 +114,12 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
+           </ul>
+         )}
+         <div className="mt-auto flex items-center justify-between gap-3 pt-2 text-xs">
+-          <span className="truncate text-mute">Contact: {post.instagram}</span>
+-          {instagramHref && (
+-            <a href={instagramHref} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold uppercase tracking-widest text-ember hover:text-bone">
+-              Instagram
++          <span className="truncate text-mute">
++            {contactMethod.label}: {contactValue}
++          </span>
++          {contactHref && (
++            <a href={contactHref} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold uppercase tracking-widest text-ember hover:text-bone">
++              {contactMethod.label}
+             </a>
+           )}
+         </div>
+diff --git a/components/board/board-form.tsx b/components/board/board-form.tsx
+index 9ff3e45e..cd16d73e 100644
+--- a/components/board/board-form.tsx
++++ b/components/board/board-form.tsx
+@@ -3,7 +3,7 @@
+ import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+ import { Check, ImagePlus, LoaderCircle, X } from 'lucide-react'
+ import { DropdownField, TextAreaField, TextField } from '@/components/forms/controls'
+-import { boardCategories, boardDurations, boardFeaturedPrices, experienceLevels, ranks, roles, type BoardCategory } from '@/lib/site'
++import { boardCategories, boardContactMethods, boardDurations, boardFeaturedPrices, boardPostTypeLabel, boardPostTypes, experienceLevels, ranks, roles, type BoardCategory, type BoardPostType } from '@/lib/site'
+ import { btn } from '@/lib/ui'
+ import { cn } from '@/lib/utils'
+ import { emptyBoardPost, validateBoardPost, type BoardPostErrors, type BoardPostInput } from '@/lib/validation'
+@@ -24,8 +24,18 @@ const sellsOptions = [
+ 
+ const MAX_LOGO_BYTES = 500_000
+ 
+-export function BoardForm() {
+-  const [values, setValues] = useState<BoardPostInput>({ ...emptyBoardPost })
++export function BoardForm({
++  adminSubmit,
++}: {
++  // When set, the form runs in admin mode: the owner adds a featured post
++  // himself (goes live straight away, free) instead of sending it for review.
++  adminSubmit?: (input: BoardPostInput) => Promise<{ ok: boolean; errors?: BoardPostErrors }>
++}) {
++  const adminMode = Boolean(adminSubmit)
++  const [values, setValues] = useState<BoardPostInput>({
++    ...emptyBoardPost,
++    featuredDays: adminMode ? 3 : 0,
++  })
+   const [errors, setErrors] = useState<BoardPostErrors>({})
+   const [submitting, setSubmitting] = useState(false)
+   const [serverError, setServerError] = useState('')
+@@ -34,6 +44,10 @@ export function BoardForm() {
+   const fileRef = useRef<HTMLInputElement>(null)
+ 
+   const category = values.category as BoardCategory
++  const postType = (values.postType === 'promote' ? 'promote' : 'requirement') as BoardPostType
++  const isPromote = postType === 'promote'
++  const contactMethod = boardContactMethods.find((method) => method.id === values.contactType) ?? boardContactMethods[0]
++  const featuringOptions = adminMode ? boardDurations.filter((days) => days > 0) : boardDurations
+ 
+   const set = <K extends keyof BoardPostInput>(key: K, value: BoardPostInput[K]) => {
+     setValues((current) => ({ ...current, [key]: value }))
+@@ -65,6 +79,16 @@ export function BoardForm() {
+     setSubmitting(true)
+     setServerError('')
+     try {
++      if (adminSubmit) {
++        // The server action redirects to /admin/board on success.
++        const result = await adminSubmit(values)
++        if (result.errors) {
++          setErrors(result.errors)
++        } else if (!result.ok) {
++          setServerError('Something went wrong. Please try again.')
++        }
++        return
++      }
+       const response = await fetch('/api/board-posts', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+@@ -105,7 +129,7 @@ export function BoardForm() {
+           }}
+           className={btn.ghost}
+         >
+-          Post another requirement
++          Post another
+         </button>
+       </div>
+     )
+@@ -136,7 +160,11 @@ export function BoardForm() {
+               <button
+                 key={item.id}
+                 type="button"
+-                onClick={() => set('category', item.id)}
++                onClick={() => {
++                  set('category', item.id)
++                  // Only organisations choose — everyone else promotes.
++                  set('postType', item.id === 'organisation' ? 'requirement' : 'promote')
++                }}
+                 aria-pressed={active}
+                 className={cn(
+                   'border px-4 py-2.5 text-sm font-bold transition-colors',
+@@ -155,6 +183,32 @@ export function BoardForm() {
+         )}
+       </fieldset>
+ 
++      {category === 'organisation' && (
++        <fieldset className="flex flex-col gap-3">
++          <legend className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-bone">What do you want to do?</legend>
++          <div className="flex flex-wrap gap-2" role="group" aria-label="What do you want to do?">
++            {boardPostTypes.map((item) => {
++              const active = postType === item.id
++              return (
++                <button
++                  key={item.id}
++                  type="button"
++                  onClick={() => set('postType', item.id)}
++                  aria-pressed={active}
++                  className={cn(
++                    'flex flex-col items-start gap-0.5 border px-4 py-2.5 text-left transition-colors',
++                    active ? 'border-ember bg-ember/15 text-bone' : 'border-white/10 bg-transparent text-mute hover:border-white/30 hover:text-bone',
++                  )}
++                >
++                  <span className="text-sm font-bold">{boardPostTypeLabel(category, item.id)}</span>
++                  <span className="text-xs font-normal text-mute">{item.hint}</span>
++                </button>
++              )
++            })}
++          </div>
++        </fieldset>
++      )}
++
+       <div className="grid gap-6 sm:grid-cols-2">
+         <TextField
+           id="orgName"
+@@ -164,26 +218,56 @@ export function BoardForm() {
+           error={errors.orgName}
+           onChange={(event) => set('orgName', event.target.value)}
+         />
+-        <TextField
+-          id="instagram"
+-          label="Instagram contact"
+-          placeholder="@yourhandle"
+-          hint="People reach you here."
+-          value={values.instagram}
+-          error={errors.instagram}
+-          onChange={(event) => set('instagram', event.target.value)}
+-        />
++        <div className="flex flex-col gap-3">
++          <span className="text-xs font-bold uppercase tracking-[0.18em] text-bone">How can people reach you?</span>
++          <div className="flex flex-wrap gap-2" role="group" aria-label="Contact method">
++            {boardContactMethods.map((method) => {
++              const active = values.contactType === method.id
++              return (
++                <button
++                  key={method.id}
++                  type="button"
++                  onClick={() => set('contactType', method.id)}
++                  aria-pressed={active}
++                  className={cn(
++                    'border px-4 py-2.5 text-sm font-bold transition-colors',
++                    active ? 'border-ember bg-ember/15 text-bone' : 'border-white/10 bg-transparent text-mute hover:border-white/30 hover:text-bone',
++                  )}
++                >
++                  {method.label}
++                </button>
++              )
++            })}
++          </div>
++          <TextField
++            id="contact"
++            label={contactMethod.label}
++            placeholder={contactMethod.placeholder}
++            hint={contactMethod.hint}
++            value={values.contact}
++            error={errors.contact}
++            onChange={(event) => set('contact', event.target.value)}
++          />
++        </div>
+       </div>
+ 
+       <TextField
+         id="title"
+-        label="Requirement title"
++        label={isPromote ? 'Headline' : 'Requirement title'}
+         placeholder={
+-          category === 'store'
+-            ? 'e.g. Cheap diamonds, instant delivery'
+-            : category === 'caster'
+-              ? 'e.g. English + Hindi caster for tournaments'
+-              : 'e.g. Roamer required for second lineup'
++          isPromote
++            ? category === 'organisation'
++              ? 'e.g. Three lineups, trials open, join the family'
++              : category === 'coach'
++                ? 'e.g. I coach drafting and macro play'
++                : category === 'analyst'
++                  ? 'e.g. VOD review and opponent scouting'
++                  : category === 'caster'
++                    ? 'e.g. English + Hindi caster for tournaments'
++                    : category === 'store'
++                      ? 'e.g. Cheap diamonds, instant delivery'
++                      : 'e.g. Daily Mythic rank push streams'
++            : 'e.g. Roamer required for second lineup'
+         }
+         value={values.title}
+         error={errors.title}
+@@ -195,13 +279,13 @@ export function BoardForm() {
+         label="Short line"
+         rows={3}
+         maxLength={400}
+-        placeholder="One or two lines about what you need or offer."
++        placeholder={isPromote ? 'One or two lines about what you offer.' : 'One or two lines about what you need or offer.'}
+         value={values.detail}
+         error={errors.detail}
+         onChange={(event) => set('detail', event.target.value)}
+       />
+ 
+-      {category === 'organisation' && (
++      {category === 'organisation' && !isPromote && (
+         <div className="grid gap-6 sm:grid-cols-2">
+           <DropdownField
+             id="roleNeeded"
+@@ -325,7 +409,7 @@ export function BoardForm() {
+       <fieldset className="flex flex-col gap-3">
+         <legend className="mb-1 text-xs font-bold uppercase tracking-[0.18em] text-bone">Featuring</legend>
+         <div className="flex flex-wrap gap-2" role="group" aria-label="Featuring duration">
+-          {boardDurations.map((days) => {
++          {featuringOptions.map((days) => {
+             const active = values.featuredDays === days
+             return (
+               <button
+@@ -343,7 +427,11 @@ export function BoardForm() {
+             )
+           })}
+         </div>
+-        <p className="text-xs text-mute">Featured posts are highlighted in gold and pinned at the top of the board and the landing page.</p>
++        <p className="text-xs text-mute">
++          {adminMode
++            ? 'Free — you add it yourself, no payment. It shows in gold at the top of the board and the landing page.'
++            : 'Featured posts are highlighted in gold and pinned at the top of the board and the landing page.'}
++        </p>
+       </fieldset>
+ 
+       {serverError && (
+@@ -359,6 +447,8 @@ export function BoardForm() {
+               <LoaderCircle className="size-4 animate-spin" />
+               Sending
+             </>
++          ) : adminMode ? (
++            'Add featured post'
+           ) : (
+             'Send for review'
+           )}
+diff --git a/components/board/board-page.tsx b/components/board/board-page.tsx
+index ee5064cf..e98b17b2 100644
+--- a/components/board/board-page.tsx
++++ b/components/board/board-page.tsx
+@@ -71,7 +71,7 @@ export function BoardPage() {
+         <p className="border border-dashed border-white/15 p-8 text-sm text-mute">Loading the board…</p>
+       ) : visible.length === 0 ? (
+         <p className="border border-dashed border-white/15 p-8 text-sm text-mute">
+-          {filter ? 'Nothing in this category yet.' : 'No posts on the board yet. Be the first to post a requirement below.'}
++          {filter ? 'Nothing in this category yet.' : 'No posts on the board yet. Be the first to post below.'}
+         </p>
+       ) : (
+         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+@@ -83,11 +83,11 @@ export function BoardPage() {
+ 
+       <section className="flex flex-col gap-6">
+         <div className="flex flex-col gap-2">
+-          <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">Post a requirement</p>
++          <p className="text-xs font-bold uppercase tracking-[0.3em] text-ember">Post on the board</p>
+           <h2 className="display text-4xl text-bone md:text-5xl">Put it on the board.</h2>
+           <p className="max-w-2xl text-sm leading-relaxed text-mute">
+-            Organisations, coaches, analysts, casters and stores can promote themselves here. Every post is reviewed by the manager
+-            before it goes live.
++            Organisations, coaches, analysts, casters, streamers and stores can promote themselves or post a requirement here. Every
++            post is reviewed by the manager before it goes live.
+           </p>
+         </div>
+         <BoardForm />
+diff --git a/lib/actions.ts b/lib/actions.ts
+index 9d6c0219..4dad6744 100644
+--- a/lib/actions.ts
++++ b/lib/actions.ts
+@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
+ import { redirect } from 'next/navigation'
+ import { adminConfigured, assertAdmin, checkPassword, createSession, destroySession } from './auth'
+ import { ensureSchema, getSql } from './db'
+-import { statuses } from './site'
++import { boardBannerFor, statuses } from './site'
++import { cleanBoardPost, validateBoardPost, type BoardPostErrors, type BoardPostInput } from './validation'
+ 
+ export type LoginState = { error?: string } | undefined
+ 
+@@ -81,3 +82,54 @@ export async function setBoardPostStatusAction(formData: FormData) {
+   revalidatePath('/board')
+   revalidatePath('/')
+ }
++
++// Owner adds a featured post himself: it goes live immediately, in gold,
++// and it is free — no payment. Same fields as the public board form.
++export async function addBoardPostAction(input: BoardPostInput): Promise<{ ok: boolean; errors?: BoardPostErrors }> {
++  await assertAdmin()
++  const cleaned = cleanBoardPost(input)
++  const errors = validateBoardPost(cleaned)
++  if (cleaned.featuredDays < 1 || cleaned.featuredDays > 7) {
++    errors.featuredDays = 'Pick 1 to 7 days of featuring.'
++  }
++  if (Object.keys(errors).length) return { ok: false, errors }
++  await ensureSchema()
++  const sql = getSql()
++  const banner = boardBannerFor(`${cleaned.orgName}:${cleaned.title}`)
++  await sql`INSERT INTO board_posts
++    (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how,
++     instagram, contact_type, contact_value, logo, banner, featured_days, status, owner_added)
++    VALUES (${cleaned.category}, ${cleaned.postType}, ${cleaned.orgName}, ${cleaned.title}, ${cleaned.detail}, ${cleaned.roleNeeded},
++      ${cleaned.rank}, ${cleaned.speciality}, ${cleaned.experience}, ${cleaned.languages}, ${cleaned.sells},
++      ${cleaned.buyHow}, ${cleaned.instagram}, ${cleaned.contactType}, ${cleaned.contact}, ${cleaned.logo},
++      ${banner}, ${cleaned.featuredDays}, 'approved', TRUE)`
++  revalidatePath('/admin/board')
++  revalidatePath('/board')
++  revalidatePath('/')
++  redirect('/admin/board?added=1')
++}
++
++// Change the featuring of a live post: 1–7 days to lower or extend it,
++// 0 to unfeature it (it stays live as a standard blue listing).
++export async function setBoardPostFeaturedAction(formData: FormData) {
++  await assertAdmin()
++  await ensureSchema()
++  const id = Number(formData.get('id'))
++  const days = Number(formData.get('featuredDays'))
++  if (!Number.isInteger(id) || ![0, 1, 2, 3, 4, 5, 6, 7].includes(days)) return
++  const sql = getSql()
++  await sql`UPDATE board_posts SET featured_days = ${days}, updated_at = NOW() WHERE id = ${id}`
++  revalidatePath('/admin/board')
++  revalidatePath('/board')
++  revalidatePath('/')
++}
++
++export async function deleteBoardPostAction(formData: FormData) {
++  await assertAdmin()
++  const id = Number(formData.get('id'))
++  if (!Number.isInteger(id)) return
++  await getSql()`DELETE FROM board_posts WHERE id = ${id}`
++  revalidatePath('/admin/board')
++  revalidatePath('/board')
++  revalidatePath('/')
++}
+diff --git a/lib/db.ts b/lib/db.ts
+index b6cdc150..6d1d89e5 100644
+--- a/lib/db.ts
++++ b/lib/db.ts
+@@ -51,6 +51,7 @@ export type MessageRow = {
+ export type BoardPostRow = {
+   id: number
+   category: string
++  post_type: string
+   org_name: string
+   title: string
+   detail: string
+@@ -62,6 +63,9 @@ export type BoardPostRow = {
+   sells: string
+   buy_how: string
+   instagram: string
++  contact_type: string
++  contact_value: string
++  owner_added: boolean
+   logo: string
+   banner: string
+   featured_days: number
+@@ -144,6 +148,7 @@ export function ensureSchema() {
+       await sql`CREATE TABLE IF NOT EXISTS board_posts (
+         id SERIAL PRIMARY KEY,
+         category TEXT NOT NULL,
++        post_type TEXT NOT NULL DEFAULT 'requirement',
+         org_name TEXT NOT NULL,
+         title TEXT NOT NULL,
+         detail TEXT NOT NULL DEFAULT '',
+@@ -155,6 +160,9 @@ export function ensureSchema() {
+         sells TEXT NOT NULL DEFAULT '',
+         buy_how TEXT NOT NULL DEFAULT '',
+         instagram TEXT NOT NULL DEFAULT '',
++        contact_type TEXT NOT NULL DEFAULT 'instagram',
++        contact_value TEXT NOT NULL DEFAULT '',
++        owner_added BOOLEAN NOT NULL DEFAULT FALSE,
+         logo TEXT NOT NULL DEFAULT '',
+         banner TEXT NOT NULL DEFAULT '',
+         featured_days INTEGER NOT NULL DEFAULT 0,
+@@ -164,6 +172,12 @@ export function ensureSchema() {
+         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+       )`
+       await sql`CREATE INDEX IF NOT EXISTS board_posts_status_idx ON board_posts (status, created_at DESC)`
++      // Backfill for boards created before contact methods / owner posts.
++      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS contact_type TEXT NOT NULL DEFAULT 'instagram'`
++      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS contact_value TEXT NOT NULL DEFAULT ''`
++      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS owner_added BOOLEAN NOT NULL DEFAULT FALSE`
++      // Backfill for boards created before post types (promote vs requirement).
++      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS post_type TEXT NOT NULL DEFAULT 'requirement'`
+     })().catch((error) => {
+       ready = null
+       throw error
+diff --git a/lib/discord.ts b/lib/discord.ts
+index b905b867..8daaceef 100644
+--- a/lib/discord.ts
++++ b/lib/discord.ts
+@@ -1,4 +1,4 @@
+-import { boardDurationLabel, experienceLevels, getBoardCategory, getRole, siteUrl, staffExperienceLevels, topics } from './site'
++import { boardDurationLabel, experienceLevels, getBoardCategory, getBoardContactMethod, getRole, siteUrl, staffExperienceLevels, topics } from './site'
+ import type { ApplicationRow, BoardPostRow, MessageRow } from './db'
+ 
+ type Embed = Record<string, unknown>
+@@ -132,6 +132,9 @@ export async function sendBoardPostToDiscord(row: BoardPostRow) {
+     .filter(Boolean)
+     .join('\n')
+ 
++  const contactMethod = getBoardContactMethod(row.contact_type || 'instagram')
++  const contactValue = row.contact_value || row.instagram
++
+   const embed: Embed = {
+     author: { name: 'ASHEN WINGS  ·  ORG BOARD' },
+     title: `New board post for review  ·  ${category}`,
+@@ -140,8 +143,9 @@ export async function sendBoardPostToDiscord(row: BoardPostRow) {
+     color: GOLD,
+     fields: [
+       { name: '▸ Category', value: `**${category}**`, inline: true },
++      { name: '▸ Type', value: row.post_type === 'promote' ? '**Promote**' : '**Requirement**', inline: true },
+       { name: '▸ Featuring', value: boardDurationLabel(row.featured_days), inline: true },
+-      { name: '▸ Instagram', value: row.instagram ? mono(row.instagram) : 'n/a', inline: true },
++      { name: '▸ Contact', value: contactValue ? `${contactMethod.label}: ${mono(contactValue)}` : 'n/a', inline: true },
+       ...(specifics ? [{ name: '▸ Details', value: cut(specifics, 400) }] : []),
+       { name: '▸ Review in dashboard', value: `[Open the board queue](${base}/admin/board)` },
+     ],
+diff --git a/lib/site.ts b/lib/site.ts
+index ed1642ef..85b39c47 100644
+--- a/lib/site.ts
++++ b/lib/site.ts
+@@ -14,7 +14,7 @@ export const site = {
+   ],
+ } as const
+ 
+-export type BoardCategory = 'organisation' | 'coach' | 'analyst' | 'caster' | 'store'
++export type BoardCategory = 'organisation' | 'coach' | 'analyst' | 'caster' | 'store' | 'streamer'
+ 
+ export const boardCategories: { id: BoardCategory; label: string; tag: string }[] = [
+   { id: 'organisation', label: 'Organisation', tag: 'Org' },
+@@ -22,8 +22,21 @@ export const boardCategories: { id: BoardCategory; label: string; tag: string }[
+   { id: 'analyst', label: 'Analyst', tag: 'Analyst' },
+   { id: 'caster', label: 'Caster', tag: 'Caster' },
+   { id: 'store', label: 'Store', tag: 'Store' },
++  { id: 'streamer', label: 'Streamer', tag: 'Streamer' },
+ ]
+ 
++// A board post is either self-promotion or a request. Only organisations get
++// the choice — every other category is promote-only.
++export type BoardPostType = 'promote' | 'requirement'
++
++export const boardPostTypes: { id: BoardPostType; label: string; hint: string }[] = [
++  { id: 'promote', label: 'Promote', hint: 'Show off what you do or sell' },
++  { id: 'requirement', label: 'Post a requirement', hint: 'Ask for something you need' },
++]
++
++export const boardPostTypeLabel = (category: BoardCategory, type: BoardPostType) =>
++  type === 'promote' ? (category === 'organisation' ? 'Promote my org' : 'Promote myself') : 'Post a requirement'
++
+ export const getBoardCategory = (id: string) => boardCategories.find((item) => item.id === id)
+ 
+ // Featured duration in days. 0 = a standard (blue) listing, no featuring.
+@@ -40,8 +53,35 @@ export const boardFeaturedPrices: Record<number, number> = {
+   7: 89,
+ }
+ 
+-export const boardDurationLabel = (days: number) =>
+-  days > 0 ? `${days} day${days === 1 ? '' : 's'} featured · ₹${boardFeaturedPrices[days]}` : 'Standard listing'
++export const boardDurationLabel = (days: number, free = false) =>
++  days > 0
++    ? `${days} day${days === 1 ? '' : 's'} featured${free ? ' · Free' : ` · ₹${boardFeaturedPrices[days]}`}`
++    : 'Standard listing'
++
++export type BoardContactMethod = 'instagram' | 'discord'
++
++// How people reach a poster: Instagram or Discord. Added 2026-11-22 at the
++// user's request — the board form used to ask for Instagram only. WhatsApp
++// was offered briefly and removed 2026-11-23 at the user's request.
++export const boardContactMethods: { id: BoardContactMethod; label: string; placeholder: string; hint: string }[] = [
++  { id: 'instagram', label: 'Instagram', placeholder: '@yourhandle', hint: 'People reach you here.' },
++  { id: 'discord', label: 'Discord', placeholder: 'e.g. yourname', hint: 'Your Discord username.' },
++]
++
++export const getBoardContactMethod = (id: string) =>
++  boardContactMethods.find((item) => item.id === id) ?? boardContactMethods[0]
++
++// Public link for a contact value, if one exists. Discord has no public
++// profile URL, so it returns undefined and the card just shows the username.
++export const boardContactHref = (method: string, value: string): string | undefined => {
++  const clean = value.trim()
++  if (!clean) return undefined
++  if (method === 'instagram') {
++    const handle = clean.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '')
++    return handle ? `https://instagram.com/${handle}` : undefined
++  }
++  return undefined
++}
+ 
+ // Card banners: the user's friend's artwork, used with permission.
+ export const boardBanners = ['/art/board-banner-slash.jpg', '/art/board-banner-oni.jpg', '/art/board-banner-neon.jpg'] as const
+diff --git a/lib/validation.ts b/lib/validation.ts
+index eda70ed2..ab697582 100644
+--- a/lib/validation.ts
++++ b/lib/validation.ts
+@@ -210,6 +210,7 @@ export function validateContact(input: ContactInput): ContactErrors {
+ 
+ export type BoardPostInput = {
+   category: string
++  postType: string
+   orgName: string
+   title: string
+   detail: string
+@@ -221,6 +222,8 @@ export type BoardPostInput = {
+   sells: string
+   buyHow: string
+   instagram: string
++  contactType: string
++  contact: string
+   logo: string
+   featuredDays: number
+   website: string
+@@ -230,6 +233,7 @@ export type BoardPostErrors = Partial<Record<keyof BoardPostInput, string>>
+ 
+ export const emptyBoardPost: BoardPostInput = {
+   category: 'organisation',
++  postType: 'requirement',
+   orgName: '',
+   title: '',
+   detail: '',
+@@ -241,6 +245,8 @@ export const emptyBoardPost: BoardPostInput = {
+   sells: '',
+   buyHow: '',
+   instagram: '',
++  contactType: 'instagram',
++  contact: '',
+   logo: '',
+   featuredDays: 0,
+   website: '',
+@@ -249,19 +255,33 @@ export const emptyBoardPost: BoardPostInput = {
+ export function cleanBoardPost(raw: Partial<Record<keyof BoardPostInput, unknown>>): BoardPostInput {
+   const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '')
+   const days = Number(raw.featuredDays)
++  const contactType = raw.contactType === 'discord' ? 'discord' : 'instagram'
++  const contact = text(raw.contact, 80)
++  const category = text(raw.category, 20)
++  // Only organisations choose between promote and requirement — every other
++  // category is promote-only. Organisations default to requirement.
++  const postType = category === 'organisation' ? (raw.postType === 'promote' ? 'promote' : 'requirement') : 'promote'
++  // Role and rank only apply to an organisation requirement — drop stale
++  // values if the poster switched to promote or another category.
++  const isOrgRequirement = category === 'organisation' && postType === 'requirement'
+   return {
+-    category: text(raw.category, 20),
++    category,
++    postType,
+     orgName: text(raw.orgName, 80),
+     title: text(raw.title, 120),
+     detail: text(raw.detail, 400),
+-    roleNeeded: text(raw.roleNeeded, 20),
+-    rank: text(raw.rank, 40),
++    roleNeeded: isOrgRequirement ? text(raw.roleNeeded, 20) : '',
++    rank: isOrgRequirement ? text(raw.rank, 40) : '',
+     speciality: text(raw.speciality, 120),
+     experience: text(raw.experience, 20),
+     languages: text(raw.languages, 120),
+     sells: text(raw.sells, 20),
+     buyHow: text(raw.buyHow, 240),
+-    instagram: text(raw.instagram, 80),
++    // instagram is kept for backwards compatibility with older rows and the
++    // Discord embed — it mirrors the contact when the method is Instagram.
++    instagram: contactType === 'instagram' ? contact : text(raw.instagram, 80),
++    contactType,
++    contact,
+     logo: typeof raw.logo === 'string' ? raw.logo.slice(0, 600_000) : '',
+     featuredDays: [0, 1, 2, 3, 4, 5, 6, 7].includes(days) ? days : 0,
+     website: text(raw.website, 100),
+@@ -273,9 +293,19 @@ export function validateBoardPost(input: BoardPostInput): BoardPostErrors {
+   if (!boardCategories.some((item) => item.id === input.category)) errors.category = 'Choose what you are.'
+   if (input.orgName.length < 2) errors.orgName = 'Enter the organisation or your name.'
+   if (input.title.length < 5) errors.title = 'Give the post a short title (5+ characters).'
+-  if (input.detail.length < 10) errors.detail = 'Add a short line about the requirement (10+ characters).'
+-  if (!input.instagram) errors.instagram = 'Add an Instagram handle so people can reach you.'
+-  if (input.category === 'organisation') {
++  if (input.detail.length < 10)
++    errors.detail =
++      input.postType === 'promote'
++        ? 'Add a short line about what you offer (10+ characters).'
++        : 'Add a short line about the requirement (10+ characters).'
++  if (!input.contact) {
++    errors.contact = 'Add a contact so people can reach you.'
++  } else if (input.contactType === 'instagram' && !/^@?[A-Za-z0-9._]{2,40}$/.test(input.contact)) {
++    errors.contact = 'Enter a valid Instagram handle.'
++  } else if (input.contactType === 'discord' && !/^[A-Za-z0-9._]{2,32}$/.test(input.contact)) {
++    errors.contact = 'Enter a valid Discord username (letters, numbers, . and _).'
++  }
++  if (input.category === 'organisation' && input.postType === 'requirement') {
+     if (!input.roleNeeded) errors.roleNeeded = 'Choose the role you need.'
+     if (!input.rank) errors.rank = 'Choose a rank.'
+   }
