@@ -27,6 +27,9 @@ export type ApplicationRow = {
   pitch: string
   flex_lane: string
   shotcalling: string
+  trial_day: string
+  trial_time: string
+  gender: string
   status: string
   rating: number
   admin_notes: string
@@ -69,6 +72,7 @@ export type BoardPostRow = {
   logo: string
   banner: string
   featured_days: number
+  featured_until: string | null
   status: string
   discord_sent: boolean
   created_at: string
@@ -114,6 +118,9 @@ export function ensureSchema() {
         pitch TEXT NOT NULL DEFAULT '',
         flex_lane TEXT NOT NULL DEFAULT '',
         shotcalling TEXT NOT NULL DEFAULT '',
+        trial_day TEXT NOT NULL DEFAULT '',
+        trial_time TEXT NOT NULL DEFAULT '',
+        gender TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT 'new',
         rating INTEGER NOT NULL DEFAULT 0,
         admin_notes TEXT NOT NULL DEFAULT '',
@@ -132,6 +139,9 @@ export function ensureSchema() {
       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS pitch TEXT NOT NULL DEFAULT ''`
       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS flex_lane TEXT NOT NULL DEFAULT ''`
       await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS shotcalling TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS trial_day TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS trial_time TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE applications ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT ''`
       await sql`UPDATE applications SET track = 'staff' WHERE track = 'player' AND code LIKE 'AW-S-%'`
       await sql`CREATE TABLE IF NOT EXISTS contact_messages (
         id SERIAL PRIMARY KEY,
@@ -166,6 +176,7 @@ export function ensureSchema() {
         logo TEXT NOT NULL DEFAULT '',
         banner TEXT NOT NULL DEFAULT '',
         featured_days INTEGER NOT NULL DEFAULT 0,
+        featured_until TIMESTAMPTZ,
         status TEXT NOT NULL DEFAULT 'pending',
         discord_sent BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -178,6 +189,10 @@ export function ensureSchema() {
       await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS owner_added BOOLEAN NOT NULL DEFAULT FALSE`
       // Backfill for boards created before post types (promote vs requirement).
       await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS post_type TEXT NOT NULL DEFAULT 'requirement'`
+      // Backfill for boards created before featured auto-expiry (2026-11-23).
+      // Existing rows keep featured_until NULL, which the featured rule treats
+      // as still featured while featured_days > 0.
+      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ`
     })().catch((error) => {
       ready = null
       throw error

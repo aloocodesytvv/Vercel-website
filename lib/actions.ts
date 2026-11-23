@@ -77,7 +77,12 @@ export async function setBoardPostStatusAction(formData: FormData) {
   const status = String(formData.get('status') ?? '')
   if (!Number.isInteger(id) || !['approved', 'declined', 'pending'].includes(status)) return
   const sql = getSql()
-  await sql`UPDATE board_posts SET status = ${status}, updated_at = NOW() WHERE id = ${id}`
+  // Approving a featured post starts its featuring clock now.
+  await sql`UPDATE board_posts
+    SET status = ${status}, updated_at = NOW(),
+      featured_until = CASE WHEN ${status} = 'approved' AND featured_days > 0
+        THEN NOW() + featured_days * INTERVAL '1 day' ELSE featured_until END
+    WHERE id = ${id}`
   revalidatePath('/admin/board')
   revalidatePath('/board')
   revalidatePath('/')
@@ -96,13 +101,15 @@ export async function addBoardPostAction(input: BoardPostInput): Promise<{ ok: b
   await ensureSchema()
   const sql = getSql()
   const banner = boardBannerFor(`${cleaned.orgName}:${cleaned.title}`)
+  // Owner posts go live featured straight away, so the clock starts now.
+  const featuredUntil = new Date(Date.now() + cleaned.featuredDays * 86400000).toISOString()
   await sql`INSERT INTO board_posts
     (category, post_type, org_name, title, detail, role_needed, rank, speciality, experience, languages, sells, buy_how,
-     instagram, contact_type, contact_value, logo, banner, featured_days, status, owner_added)
+     instagram, contact_type, contact_value, logo, banner, featured_days, featured_until, status, owner_added)
     VALUES (${cleaned.category}, ${cleaned.postType}, ${cleaned.orgName}, ${cleaned.title}, ${cleaned.detail}, ${cleaned.roleNeeded},
       ${cleaned.rank}, ${cleaned.speciality}, ${cleaned.experience}, ${cleaned.languages}, ${cleaned.sells},
       ${cleaned.buyHow}, ${cleaned.instagram}, ${cleaned.contactType}, ${cleaned.contact}, ${cleaned.logo},
-      ${banner}, ${cleaned.featuredDays}, 'approved', TRUE)`
+      ${banner}, ${cleaned.featuredDays}, ${featuredUntil}, 'approved', TRUE)`
   revalidatePath('/admin/board')
   revalidatePath('/board')
   revalidatePath('/')
@@ -118,7 +125,12 @@ export async function setBoardPostFeaturedAction(formData: FormData) {
   const days = Number(formData.get('featuredDays'))
   if (!Number.isInteger(id) || ![0, 1, 2, 3, 4, 5, 6, 7].includes(days)) return
   const sql = getSql()
-  await sql`UPDATE board_posts SET featured_days = ${days}, updated_at = NOW() WHERE id = ${id}`
+  // Changing the duration restarts the featuring clock from now;
+  // unfeaturing (0 days) clears it.
+  await sql`UPDATE board_posts
+    SET featured_days = ${days}, updated_at = NOW(),
+      featured_until = CASE WHEN ${days} > 0 THEN NOW() + ${days} * INTERVAL '1 day' ELSE NULL END
+    WHERE id = ${id}`
   revalidatePath('/admin/board')
   revalidatePath('/board')
   revalidatePath('/')

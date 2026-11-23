@@ -58,6 +58,41 @@ export const boardDurationLabel = (days: number, free = false) =>
     ? `${days} day${days === 1 ? '' : 's'} featured${free ? ' · Free' : ` · ₹${boardFeaturedPrices[days]}`}`
     : 'Standard listing'
 
+// Featured rule (2026-11-23): a post counts as featured only while it has
+// featured days left AND its featured_until is unset (grandfathered) or in
+// the future. The API mirrors this rule in SQL — keep the two in sync.
+export const isPostFeatured = (featuredDays: number, featuredUntil: string | null | undefined) =>
+  featuredDays > 0 && (!featuredUntil || new Date(featuredUntil).getTime() > Date.now())
+
+// Trial time picker (recruitment form, 2026-11-23). Slots are IST.
+export const trialTimeSlots = [
+  { value: '10:00 AM – 12:00 PM', label: '10:00 AM – 12:00 PM' },
+  { value: '12:00 PM – 2:00 PM', label: '12:00 PM – 2:00 PM' },
+  { value: '2:00 PM – 4:00 PM', label: '2:00 PM – 4:00 PM' },
+  { value: '4:00 PM – 6:00 PM', label: '4:00 PM – 6:00 PM' },
+  { value: '6:00 PM – 8:00 PM', label: '6:00 PM – 8:00 PM' },
+  { value: '8:00 PM – 10:00 PM', label: '8:00 PM – 10:00 PM' },
+] as const
+
+export const genderLabel = (value: string) => (value === 'male' ? 'Male' : value === 'female' ? 'Female' : '')
+
+// '2026-11-25' -> '25 Nov 2026'. Parses the parts directly so the date
+// never shifts with the viewer's timezone.
+export const formatDayShort = (day: string) => {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day.trim())
+  if (!match) return day
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  return `${Number(match[3])} ${months[Number(match[2]) - 1]} ${match[1]}`
+}
+
+export const trialLabel = (day: string, time: string) => {
+  const dayPart = day ? formatDayShort(day) : ''
+  if (dayPart && time) return `${dayPart} · ${time}`
+  if (dayPart) return dayPart
+  if (time) return time
+  return 'Not given'
+}
+
 export type BoardContactMethod = 'instagram' | 'discord'
 
 // How people reach a poster: Instagram or Discord. Added 2026-11-22 at the

@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, Check, Copy, LoaderCircle } from 'lucide-react'
-import { experienceLevels, getRole, ranks, roles, staffExperienceLevels, staffRoles } from '@/lib/site'
+import { experienceLevels, genderLabel, getRole, ranks, roles, staffExperienceLevels, staffRoles, trialLabel, trialTimeSlots } from '@/lib/site'
 import { btn } from '@/lib/ui'
 import { cn } from '@/lib/utils'
 import {
@@ -36,6 +36,18 @@ const shotcallingOptions = [
   { value: 'sometimes', label: 'Sometimes' },
   { value: 'no', label: 'No — I follow calls' },
 ]
+const genderOptions = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+]
+
+// Today's date in the viewer's local timezone, for the trial-day picker.
+const todayIso = () => {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
 
 const playerRoles = roles.filter((role) => role.player)
 
@@ -366,6 +378,7 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
                 <div className="grid gap-6 sm:grid-cols-2">
                   <TextField id="name" label="Full name" autoComplete="name" placeholder="Your name" {...bind('name')} />
                   <TextField id="age" label="Age" type="number" inputMode="numeric" min={13} max={60} placeholder="18" {...bind('age')} />
+                  <DropdownField id="gender" label="Gender" options={genderOptions} value={values.gender} error={errors.gender} onValueChange={setValue('gender')} />
                   <TextField id="email" label="Email" type="email" autoComplete="email" placeholder="you@example.com" {...bind('email')} />
                   <TextField id="discord" label="Discord username" placeholder="username" hint="We contact you here. Keep DMs open." {...bind('discord')} />
                 </div>
@@ -445,6 +458,27 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
                   <TextField id="timezone" label="Timezone / country" placeholder="e.g. IST, Philippines" {...bind('timezone')} />
                 </div>
                 <TextField id="availability" label="Availability" placeholder="e.g. Weekdays 7-11pm, weekends all day" {...bind('availability')} />
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <TextField
+                    id="trialDay"
+                    label="Trial day"
+                    type="date"
+                    min={todayIso()}
+                    optional
+                    hint="Pick a day that suits you for the trial scrim."
+                    {...bind('trialDay')}
+                  />
+                  <DropdownField
+                    id="trialTime"
+                    label="Trial time (IST)"
+                    options={trialTimeSlots}
+                    optional
+                    hint="Pick a time slot that suits you."
+                    value={values.trialTime}
+                    error={errors.trialTime}
+                    onValueChange={setValue('trialTime')}
+                  />
+                </div>
               </div>
             )}
 
@@ -523,12 +557,19 @@ export function RecruitmentForm({ initialRole, initialTrack }: { initialRole: st
                   {[
                     { label: 'Track', value: track === 'staff' ? 'Staff & Creators' : 'Player', goTo: 0 },
                     { label: 'Role', value: role?.name, goTo: 0 },
-                    { label: 'Applicant', value: `${values.name}, ${values.age}`, goTo: 0 },
+                    {
+                      label: 'Applicant',
+                      value: track === 'staff' ? `${values.name}, ${values.age}` : `${values.name}, ${values.age}${values.gender ? ` · ${genderLabel(values.gender)}` : ''}`,
+                      goTo: 0,
+                    },
                     { label: 'Contact', value: `${values.email} / ${values.discord}`, goTo: 0 },
                     track === 'staff'
                       ? { label: 'Experience', value: `${values.experience} · ${values.hours}`, goTo: 1 }
                       : { label: 'Game profile', value: [values.ign, values.rank, values.mainHeroes].filter(Boolean).join(' / ') || 'Not provided', goTo: 1 },
                     { label: 'Availability', value: `${values.availability} (${values.timezone})`, goTo: 1 },
+                    ...(track === 'player'
+                      ? [{ label: 'Trial time', value: trialLabel(values.trialDay, values.trialTime), goTo: 1 }]
+                      : []),
                     { label: 'Your story', value: values.message, goTo: 2 },
                   ].map((row) => (
                     <div key={row.label} className="flex items-start justify-between gap-4 p-4">

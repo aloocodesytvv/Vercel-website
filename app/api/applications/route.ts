@@ -34,10 +34,11 @@ export async function POST(request: Request) {
     const code = trackingCode(input.track)
     const rows = (await sql`INSERT INTO applications
       (code, track, role, name, email, discord, age, ign, game_id, server_id, rank, main_heroes, experience, availability, timezone, links, message,
-       staff_role, portfolio, tools, hours, past_teams, pitch, flex_lane, shotcalling)
+       staff_role, portfolio, tools, hours, past_teams, pitch, flex_lane, shotcalling, trial_day, trial_time, gender)
       VALUES (${code}, ${input.track}, ${roleKey}, ${input.name}, ${input.email}, ${input.discord}, ${Number(input.age)}, ${input.ign}, ${input.gameId},
         ${input.serverId}, ${input.rank}, ${input.mainHeroes}, ${input.experience}, ${input.availability}, ${input.timezone}, ${input.links}, ${input.message},
-        ${input.staffRole}, ${input.portfolio}, ${input.tools}, ${input.hours}, ${input.pastTeams}, ${input.pitch}, ${input.flexLane}, ${input.shotcalling})
+        ${input.staffRole}, ${input.portfolio}, ${input.tools}, ${input.hours}, ${input.pastTeams}, ${input.pitch}, ${input.flexLane}, ${input.shotcalling},
+        ${input.trialDay}, ${input.trialTime}, ${input.gender})
       RETURNING *`) as ApplicationRow[]
 
     const saved = rows[0]

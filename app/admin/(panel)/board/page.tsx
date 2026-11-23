@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ConfirmButton } from '@/components/admin/confirm-button'
-import { timeAgo } from '@/components/admin/helpers'
-import { boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
+import { fullDate, timeAgo } from '@/components/admin/helpers'
+import { boardDurationLabel, getBoardCategory, getBoardContactMethod, isPostFeatured } from '@/lib/site'
 import { deleteBoardPostAction, setBoardPostFeaturedAction, setBoardPostStatusAction } from '@/lib/actions'
 import { ensureSchema, getSql, type BoardPostRow } from '@/lib/db'
 import { btn } from '@/lib/ui'
@@ -26,7 +26,7 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
     LIMIT 200`) as BoardPostRow[]
   const pending = rows.filter((row) => row.status === 'pending').length
   const live = rows.filter((row) => row.status === 'approved').length
-  const featured = rows.filter((row) => row.status === 'approved' && row.featured_days > 0).length
+  const featured = rows.filter((row) => row.status === 'approved' && isPostFeatured(row.featured_days, row.featured_until)).length
   const declined = rows.filter((row) => row.status === 'declined').length
 
   return (
@@ -64,6 +64,8 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
             const category = getBoardCategory(post.category)
             const contactMethod = getBoardContactMethod(post.contact_type || 'instagram')
             const contactValue = post.contact_value || post.instagram
+            const activeFeatured = isPostFeatured(post.featured_days, post.featured_until)
+            const expiredFeatured = post.featured_days > 0 && !activeFeatured
             const specifics = [
               post.role_needed ? `Role: ${post.role_needed}` : '',
               post.rank ? `Rank: ${post.rank}` : '',
@@ -96,9 +98,23 @@ export default async function AdminBoardPage({ searchParams }: { searchParams: P
                     <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-bone/80">
                       {post.post_type === 'promote' ? 'Promote' : 'Requirement'}
                     </span>
-                    <span className="bg-gold/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
-                      {boardDurationLabel(post.featured_days, post.owner_added)}
-                    </span>
+                    {expiredFeatured ? (
+                      <span className="bg-white/5 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-mute">
+                        Featured expired
+                      </span>
+                    ) : (
+                      <span className="bg-gold/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
+                        {boardDurationLabel(post.featured_days, post.owner_added)}
+                      </span>
+                    )}
+                    {activeFeatured && post.featured_until && (
+                      <span className="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold/80">
+                        Featured until {fullDate(post.featured_until)}
+                      </span>
+                    )}
+                    {activeFeatured && !post.featured_until && (
+                      <span className="px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-mute">No expiry set</span>
+                    )}
                     {post.owner_added && (
                       <span className="bg-ember/15 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-ember">
                         Added by you

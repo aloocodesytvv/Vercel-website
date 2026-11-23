@@ -1,4 +1,4 @@
-import { boardCategories, experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics } from './site'
+import { boardCategories, experienceLevels, getRole, ranks, staffExperienceLevels, staffRoles, topics, trialTimeSlots } from './site'
 
 export type Track = 'player' | 'staff'
 
@@ -29,6 +29,9 @@ export type ApplicationInput = {
   // Player track
   flexLane: string
   shotcalling: string
+  trialDay: string
+  trialTime: string
+  gender: string
   consent: boolean
   website: string
 }
@@ -60,13 +63,16 @@ export const emptyApplication: ApplicationInput = {
   pitch: '',
   flexLane: '',
   shotcalling: '',
+  trialDay: '',
+  trialTime: '',
+  gender: '',
   consent: false,
   website: '',
 }
 
 export const playerSteps: { label: string; fields: (keyof ApplicationInput)[] }[] = [
-  { label: 'Role', fields: ['role', 'name', 'email', 'discord', 'age'] },
-  { label: 'Game profile', fields: ['ign', 'gameId', 'serverId', 'rank', 'mainHeroes', 'flexLane', 'shotcalling', 'experience', 'availability', 'timezone'] },
+  { label: 'Role', fields: ['role', 'name', 'email', 'discord', 'age', 'gender'] },
+  { label: 'Game profile', fields: ['ign', 'gameId', 'serverId', 'rank', 'mainHeroes', 'flexLane', 'shotcalling', 'experience', 'availability', 'timezone', 'trialDay', 'trialTime'] },
   { label: 'Your story', fields: ['message', 'links'] },
   { label: 'Review', fields: ['consent'] },
 ]
@@ -124,6 +130,19 @@ export function validateApplication(input: ApplicationInput): ApplicationErrors 
     if (!experienceLevels.some((level) => level.value === input.experience)) errors.experience = 'Select your experience level.'
     if (length(input.availability) < 3 || length(input.availability) > 200) errors.availability = 'Tell us when you can play.'
     if (length(input.timezone) < 2 || length(input.timezone) > 60) errors.timezone = 'Enter your timezone or country.'
+    if (input.gender !== 'male' && input.gender !== 'female') errors.gender = 'Choose an option.'
+    // Trial day and time are optional — only validate them when given.
+    if (input.trialDay) {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const picked = new Date(`${input.trialDay}T00:00:00`)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(input.trialDay) || Number.isNaN(picked.getTime()) || picked < today) {
+        errors.trialDay = 'Pick today or a future date.'
+      }
+    }
+    if (input.trialTime && !trialTimeSlots.some((slot) => slot.value === input.trialTime)) {
+      errors.trialTime = 'Choose a trial time slot.'
+    }
     if (length(input.links) > 600) errors.links = 'Keep links under 600 characters.'
     if (length(input.message) < 30) errors.message = 'Give us at least a few sentences (30+ characters).'
     if (length(input.message) > 1200) errors.message = 'Please keep this under 1200 characters.'
@@ -143,6 +162,7 @@ export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unk
     return /^\d+(\s*-\s*\d+)?$/.test(cleaned) ? `${cleaned.replace(/\s/g, '')} hours` : cleaned
   }
   const track = raw.track === 'staff' ? 'staff' : 'player'
+  const trialDay = text(raw.trialDay, 10)
   return {
     track,
     role: text(raw.role, 20),
@@ -168,6 +188,9 @@ export function cleanApplication(raw: Partial<Record<keyof ApplicationInput, unk
     pitch: text(raw.pitch, 1000),
     flexLane: text(raw.flexLane, 20),
     shotcalling: text(raw.shotcalling, 10),
+    trialDay: /^\d{4}-\d{2}-\d{2}$/.test(trialDay) ? trialDay : '',
+    trialTime: text(raw.trialTime, 40),
+    gender: raw.gender === 'male' || raw.gender === 'female' ? raw.gender : '',
     consent: raw.consent === true,
     website: text(raw.website, 100),
   }
