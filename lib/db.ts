@@ -51,6 +51,7 @@ export type MessageRow = {
 export type BoardPostRow = {
   id: number
   category: string
+  post_type: string
   org_name: string
   title: string
   detail: string
@@ -62,6 +63,9 @@ export type BoardPostRow = {
   sells: string
   buy_how: string
   instagram: string
+  contact_type: string
+  contact_value: string
+  owner_added: boolean
   logo: string
   banner: string
   featured_days: number
@@ -144,6 +148,7 @@ export function ensureSchema() {
       await sql`CREATE TABLE IF NOT EXISTS board_posts (
         id SERIAL PRIMARY KEY,
         category TEXT NOT NULL,
+        post_type TEXT NOT NULL DEFAULT 'requirement',
         org_name TEXT NOT NULL,
         title TEXT NOT NULL,
         detail TEXT NOT NULL DEFAULT '',
@@ -155,6 +160,9 @@ export function ensureSchema() {
         sells TEXT NOT NULL DEFAULT '',
         buy_how TEXT NOT NULL DEFAULT '',
         instagram TEXT NOT NULL DEFAULT '',
+        contact_type TEXT NOT NULL DEFAULT 'instagram',
+        contact_value TEXT NOT NULL DEFAULT '',
+        owner_added BOOLEAN NOT NULL DEFAULT FALSE,
         logo TEXT NOT NULL DEFAULT '',
         banner TEXT NOT NULL DEFAULT '',
         featured_days INTEGER NOT NULL DEFAULT 0,
@@ -164,6 +172,12 @@ export function ensureSchema() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`
       await sql`CREATE INDEX IF NOT EXISTS board_posts_status_idx ON board_posts (status, created_at DESC)`
+      // Backfill for boards created before contact methods / owner posts.
+      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS contact_type TEXT NOT NULL DEFAULT 'instagram'`
+      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS contact_value TEXT NOT NULL DEFAULT ''`
+      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS owner_added BOOLEAN NOT NULL DEFAULT FALSE`
+      // Backfill for boards created before post types (promote vs requirement).
+      await sql`ALTER TABLE board_posts ADD COLUMN IF NOT EXISTS post_type TEXT NOT NULL DEFAULT 'requirement'`
     })().catch((error) => {
       ready = null
       throw error

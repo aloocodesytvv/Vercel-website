@@ -210,6 +210,7 @@ export function validateContact(input: ContactInput): ContactErrors {
 
 export type BoardPostInput = {
   category: string
+  postType: string
   orgName: string
   title: string
   detail: string
@@ -221,6 +222,8 @@ export type BoardPostInput = {
   sells: string
   buyHow: string
   instagram: string
+  contactType: string
+  contact: string
   logo: string
   featuredDays: number
   website: string
@@ -230,6 +233,7 @@ export type BoardPostErrors = Partial<Record<keyof BoardPostInput, string>>
 
 export const emptyBoardPost: BoardPostInput = {
   category: 'organisation',
+  postType: 'requirement',
   orgName: '',
   title: '',
   detail: '',
@@ -241,6 +245,8 @@ export const emptyBoardPost: BoardPostInput = {
   sells: '',
   buyHow: '',
   instagram: '',
+  contactType: 'instagram',
+  contact: '',
   logo: '',
   featuredDays: 0,
   website: '',
@@ -249,19 +255,33 @@ export const emptyBoardPost: BoardPostInput = {
 export function cleanBoardPost(raw: Partial<Record<keyof BoardPostInput, unknown>>): BoardPostInput {
   const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '')
   const days = Number(raw.featuredDays)
+  const contactType = raw.contactType === 'discord' ? 'discord' : 'instagram'
+  const contact = text(raw.contact, 80)
+  const category = text(raw.category, 20)
+  // Only organisations choose between promote and requirement — every other
+  // category is promote-only. Organisations default to requirement.
+  const postType = category === 'organisation' ? (raw.postType === 'promote' ? 'promote' : 'requirement') : 'promote'
+  // Role and rank only apply to an organisation requirement — drop stale
+  // values if the poster switched to promote or another category.
+  const isOrgRequirement = category === 'organisation' && postType === 'requirement'
   return {
-    category: text(raw.category, 20),
+    category,
+    postType,
     orgName: text(raw.orgName, 80),
     title: text(raw.title, 120),
     detail: text(raw.detail, 400),
-    roleNeeded: text(raw.roleNeeded, 20),
-    rank: text(raw.rank, 40),
+    roleNeeded: isOrgRequirement ? text(raw.roleNeeded, 20) : '',
+    rank: isOrgRequirement ? text(raw.rank, 40) : '',
     speciality: text(raw.speciality, 120),
     experience: text(raw.experience, 20),
     languages: text(raw.languages, 120),
     sells: text(raw.sells, 20),
     buyHow: text(raw.buyHow, 240),
-    instagram: text(raw.instagram, 80),
+    // instagram is kept for backwards compatibility with older rows and the
+    // Discord embed — it mirrors the contact when the method is Instagram.
+    instagram: contactType === 'instagram' ? contact : text(raw.instagram, 80),
+    contactType,
+    contact,
     logo: typeof raw.logo === 'string' ? raw.logo.slice(0, 600_000) : '',
     featuredDays: [0, 1, 2, 3, 4, 5, 6, 7].includes(days) ? days : 0,
     website: text(raw.website, 100),
@@ -273,9 +293,19 @@ export function validateBoardPost(input: BoardPostInput): BoardPostErrors {
   if (!boardCategories.some((item) => item.id === input.category)) errors.category = 'Choose what you are.'
   if (input.orgName.length < 2) errors.orgName = 'Enter the organisation or your name.'
   if (input.title.length < 5) errors.title = 'Give the post a short title (5+ characters).'
-  if (input.detail.length < 10) errors.detail = 'Add a short line about the requirement (10+ characters).'
-  if (!input.instagram) errors.instagram = 'Add an Instagram handle so people can reach you.'
-  if (input.category === 'organisation') {
+  if (input.detail.length < 10)
+    errors.detail =
+      input.postType === 'promote'
+        ? 'Add a short line about what you offer (10+ characters).'
+        : 'Add a short line about the requirement (10+ characters).'
+  if (!input.contact) {
+    errors.contact = 'Add a contact so people can reach you.'
+  } else if (input.contactType === 'instagram' && !/^@?[A-Za-z0-9._]{2,40}$/.test(input.contact)) {
+    errors.contact = 'Enter a valid Instagram handle.'
+  } else if (input.contactType === 'discord' && !/^[A-Za-z0-9._]{2,32}$/.test(input.contact)) {
+    errors.contact = 'Enter a valid Discord username (letters, numbers, . and _).'
+  }
+  if (input.category === 'organisation' && input.postType === 'requirement') {
     if (!input.roleNeeded) errors.roleNeeded = 'Choose the role you need.'
     if (!input.rank) errors.rank = 'Choose a rank.'
   }

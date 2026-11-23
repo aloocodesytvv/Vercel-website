@@ -1,10 +1,11 @@
 import Image from 'next/image'
-import { boardDurationLabel, getBoardCategory } from '@/lib/site'
+import { boardContactHref, boardDurationLabel, getBoardCategory, getBoardContactMethod } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 export type BoardPost = {
   id: number
   category: string
+  postType: string
   orgName: string
   title: string
   detail: string
@@ -16,6 +17,9 @@ export type BoardPost = {
   sells: string
   buyHow: string
   instagram: string
+  contactType: string
+  contactValue: string
+  ownerAdded: boolean
   logo: string
   banner: string
   featuredDays: number
@@ -38,19 +42,20 @@ function Avatar({ post }: { post: BoardPost }) {
 
 export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
   const featured = post.featuredDays > 0
+  const isPromote = post.postType === 'promote'
   const category = getBoardCategory(post.category)
   const chips = [
-    post.roleNeeded ? `Needs: ${post.roleNeeded}` : '',
-    post.rank ? `Rank: ${post.rank}` : '',
+    !isPromote && post.roleNeeded ? `Needs: ${post.roleNeeded}` : '',
+    !isPromote && post.rank ? `Rank: ${post.rank}` : '',
     post.speciality ? post.speciality : '',
     post.experience ? `Exp: ${post.experience}` : '',
     post.languages ? post.languages : '',
     post.sells ? `Sells: ${post.sells}` : '',
     post.buyHow ? post.buyHow : '',
   ].filter(Boolean)
-  const instagramHref = post.instagram
-    ? `https://instagram.com/${post.instagram.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '')}`
-    : undefined
+  const contactMethod = getBoardContactMethod(post.contactType || 'instagram')
+  const contactValue = post.contactValue || post.instagram
+  const contactHref = boardContactHref(post.contactType || 'instagram', contactValue)
 
   return (
     <article
@@ -68,7 +73,7 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
               ★ Featured
             </span>
             <span className="absolute right-3 top-3 bg-ink/80 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.15em] text-gold">
-              {boardDurationLabel(post.featuredDays)}
+              {boardDurationLabel(post.featuredDays, post.ownerAdded)}
             </span>
           </>
         ) : (
@@ -83,13 +88,18 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
       <div className="flex flex-1 flex-col gap-2 p-4 pt-3">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-sm font-bold text-bone">{post.orgName}</span>
-          <span
-            className={cn(
-              'shrink-0 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em]',
-              featured ? 'bg-gold/15 text-gold' : 'bg-sky-500/15 text-sky-300',
-            )}
-          >
-            {category?.tag ?? post.category}
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="bg-white/5 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em] text-bone/70">
+              {isPromote ? 'Promote' : 'Requirement'}
+            </span>
+            <span
+              className={cn(
+                'px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.15em]',
+                featured ? 'bg-gold/15 text-gold' : 'bg-sky-500/15 text-sky-300',
+              )}
+            >
+              {category?.tag ?? post.category}
+            </span>
           </span>
         </div>
         <h3 className="display text-2xl leading-none text-bone">{post.title}</h3>
@@ -104,10 +114,12 @@ export function BoardCard({ post, tall }: { post: BoardPost; tall?: boolean }) {
           </ul>
         )}
         <div className="mt-auto flex items-center justify-between gap-3 pt-2 text-xs">
-          <span className="truncate text-mute">Contact: {post.instagram}</span>
-          {instagramHref && (
-            <a href={instagramHref} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold uppercase tracking-widest text-ember hover:text-bone">
-              Instagram
+          <span className="truncate text-mute">
+            {contactMethod.label}: {contactValue}
+          </span>
+          {contactHref && (
+            <a href={contactHref} target="_blank" rel="noopener noreferrer" className="shrink-0 font-bold uppercase tracking-widest text-ember hover:text-bone">
+              {contactMethod.label}
             </a>
           )}
         </div>
