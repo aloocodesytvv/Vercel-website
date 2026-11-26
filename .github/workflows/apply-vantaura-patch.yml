@@ -1,0 +1,23 @@
+name: Apply Vantaura patch
+on:
+  push:
+    branches: [vantaura-partners]
+    paths: ['vantaura-partners-pr.patch']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: vantaura-partners
+      - run: |
+          git config user.name "aloocodesytvv"
+          git config user.email "khaogealoo780@gmail.com"
+          git apply vantaura-partners-pr.patch
+          rm vantaura-partners-pr.patch
+          rm .github/workflows/apply-vantaura-patch.yml
+          git add -A
+          git commit -m "Partners: Vantaura X Ashen Wings Academy featured section"
+          git push
